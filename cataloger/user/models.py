@@ -69,3 +69,26 @@ class User(UserMixin, PkModel):
     def __repr__(self):
         """Represent instance as a unique string."""
         return f"<User({self.username!r})>"
+
+
+class Group(PkModel):
+    """A group of users
+    """
+
+    __tablename__ = "groups"
+    groupname = Column(db.String(30), nullable=False)
+    active = Column(db.Boolean(), default=False)
+    leader_id = reference_col("users", nullable=True)
+    leader = relationship("User", backref="groups")
+
+    def __init__(self, groupname, leadername, **kwargs):
+        """Create instance."""
+
+        leader = User.query.filter_by(username=leadername).first()
+        super().__init__(groupname=groupname, leadername=leadername, **kwargs)
+
+    def check_leader_exists(self, leadername):
+
+        if not User.query.filter_by(username=leadername).first():
+            return False
+        return True
