@@ -5,7 +5,7 @@ import sys
 
 from flask import Flask, render_template
 
-from cataloger import commands, public, user
+from cataloger import commands, public, user, annotations
 from cataloger.extensions import (
     bcrypt,
     cache,
@@ -51,6 +51,8 @@ def register_blueprints(app):
     """Register Flask blueprints."""
     app.register_blueprint(public.views.blueprint)
     app.register_blueprint(user.views.blueprint)
+    app.register_blueprint(annotations.views.search_blueprint)
+    app.register_blueprint(annotations.views.new_blueprint)
     return None
 
 

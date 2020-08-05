@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container">
+  <h1>Search for {{ cls }}</h1>
+</div>
+
+{% from "_formhelpers.html" import render_field %}
+
+<form action=""
+      class="form m-2 p-3"
+      method="post"
+      name="search_annotation">
+  <div class="row mt-2 align-self-end">
+    {{ form.csrf_token }}
+    <div class="col align-self-end">
+      {{ render_field(form.search_term) }}
+    </div>
+    <div class="col align-self-end">
+      {{ render_field(form.submit) }}
+    </div>
+  </div>
+</form>
+
+{% endblock %}

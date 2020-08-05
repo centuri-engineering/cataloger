@@ -2,8 +2,6 @@
 """User models."""
 import datetime as dt
 
-from flask_login import UserMixin
-
 from cataloger.database import (
     Column,
     PkModel,
@@ -12,18 +10,31 @@ from cataloger.database import (
     relationship,
 )
 
-
-def make_relation(left, right="ontologies"):
-
-    return db.Table(
-        f"{left}_{right}",
-        db.Base.metadata,
-        Column(left, db.ForeignKey(f"{left}.id")),
-        Column(right, db.ForeignKey(f"{right}.id")),
-    )
+from ..user.models import User
 
 
-class Ontologies(PkModel):
+class Card(PkModel):
+    """A card is a collection of annotations
+
+    This card can latter be used as key / value annotation tool
+
+    """
+
+    __tablename__ = "cards"
+    title = Column(db.String(128), nullable=False)
+    user_id = reference_col("users", nullable=False)
+    user = relationship("User", backref=__tablename__)
+    organism_id = reference_col("organisms", nullable=False)
+    organism = relationship("Organism", backref=__tablename__)
+    process_id = reference_col("processes", nullable=True)
+    process = relationship("Process", backref=__tablename__)
+    sample_id = reference_col("samples", nullable=True)
+    sample = relationship("Sample", backref=__tablename__)
+
+
+class Ontology(PkModel):
+    """One of bioportal ontologies
+    """
 
     __tablename__ = "ontologies"
     acronym = Column(db.String(30), nullable=False)
@@ -32,6 +43,12 @@ class Ontologies(PkModel):
 
 
 class Annotation(PkModel):
+    """An abstract annotation class
+
+    An annotation corresponds to an entity from one of
+    bioportal ontologies.
+
+    """
 
     __abstract__ = True
     label = Column(db.String(128), nullable=False)
@@ -39,26 +56,82 @@ class Annotation(PkModel):
     bioportal_id = Column(db.String(128), nullable=True)
 
 
-class Organisms(Annotation):
+class Organism(Annotation):
+    """An organism in the taxonomy sense,
+
+
+    Examples
+    --------
+    - fruit fly (Drosophila melanogaster)
+    - mouse (Mus musculus)
+    - human (Homo sapiens)
+    """
+
     __tablename__ = "organisms"
-    ontologies = relationship("Ontologies", secondary=make_relation("organisms"))
+    user_id = reference_col("users", nullable=True)
+    ontology_id = reference_col("ontologies", nullable=True)
+    user = relationship("User", backref=__tablename__)
+    ontology = relationship("Ontology", backref=__tablename__)
 
 
-class Processes(Annotation):
+class Process(Annotation):
+    """The biological process being studied
+
+    Examples
+    --------
+    - mesoderm invagination
+    - epithelio-mesenchymal transition
+    - colon cancer
+    - senescence
+    """
+
     __tablename__ = "processes"
-    ontologies = relationship("Ontologies", secondary=make_relation("processes"))
+    user_id = reference_col("users", nullable=True)
+    ontology_id = reference_col("ontologies", nullable=True)
+    user = relationship("User", backref=__tablename__)
+    ontology = relationship("Ontology", backref=__tablename__)
 
 
-class Genes(Annotation):
-    __tablename__ = "genes"
-    ontologies = relationship("Ontologies", secondary=make_relation("genes"))
+class Sample(Annotation):
+    """The biological sample studied
+
+    Examples
+    --------
+    - a cell line (e.g. HCT116)
+    - an organ (e.g. cerebelum)
+    - a tissue (e.g. the drosophila wing disk)
+    - an organelle
+    """
+
+    __tablename__ = "samples"
+    user_id = reference_col("users", nullable=True)
+    ontology_id = reference_col("ontologies", nullable=True)
+    user = relationship("User", backref=__tablename__)
+    ontology = relationship("Ontology", backref=__tablename__)
 
 
-class Proteins(Annotation):
-    __tablename__ = "proteins"
-    ontologies = relationship("Ontologies", secondary=make_relation("proteins"))
+class Marker(Annotation):
+    """A fluorescent marker or other contrast agent
+    """
+
+    __tablename__ = "markers"
+    user_id = reference_col("users", nullable=True)
+    ontology_id = reference_col("ontologies", nullable=True)
+    user = relationship("User", backref=__tablename__)
+    ontology = relationship("Ontology", backref=__tablename__)
 
 
-class Fluorophores(Annotation):
-    __tablename__ = "fluorophores"
-    ontologies = relationship("Ontologies", secondary=make_relation("fluorophores"))
+class Method(Annotation):
+    """An experimental method
+
+    Examples
+    --------
+    - optical tweezers
+    - laser ablation
+    """
+
+    __tablename__ = "methods"
+    user_id = reference_col("users", nullable=True)
+    ontology_id = reference_col("ontologies", nullable=True)
+    user = relationship("User", backref=__tablename__)
+    ontology = relationship("Ontology", backref=__tablename__)

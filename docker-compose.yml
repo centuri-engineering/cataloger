@@ -19,8 +19,8 @@ services:
         <<: *build_args
     image: "cataloger-development"
     ports:
-      - "5000:5000"
-      - "2992:2992"
+      - "0.0.0.0:5000:5000"
+      - "0.0.0.0:2992:2992"
     <<: *default_volumes
 
   flask-prod:
@@ -31,7 +31,7 @@ services:
         <<: *build_args
     image: "cataloger-production"
     ports:
-      - "5000:5000"
+      - "0.0.0.0:5000:5000"
     environment:
       FLASK_ENV: production
       FLASK_DEBUG: 0
