@@ -43,6 +43,12 @@ def home():
     return render_template("public/home.html", form=form)
 
 
+@blueprint.route("/quick_start", methods=["GET", "POST"])
+def quick_start():
+    """Quick start page."""
+    return render_template("public/quick_start.html")
+
+
 @blueprint.route("/logout/")
 @login_required
 def logout():

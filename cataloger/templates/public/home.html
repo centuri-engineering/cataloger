@@ -4,24 +4,22 @@
 <!-- Main jumbotron for a primary marketing message or call to action -->
 <div class="jumbotron">
     <div class="container">
-
       <h1 class="display-3">Welcome to Cataloger</h1>
-      <p>This service allows the creation of metadata and tags for microscopy experiments</p>
+      <p>This service helps you created metadata and tags for microscopy experiments</p>
+      <p>We use <a href="https://bioportal.bioontology.org">
+      Bioportal </a>to search for your annotation terms among common biological ontologies</p>
     </div>
-</div><!-- /.jumbotron -->
+</div>
+<!-- /.jumbotron -->
+
 
 <div class="container">
   <div class="row">
     <div class="col-lg-4">
-      <h2><i class="fa fa-code"></i> Add annotation entries </h2>
-      <p> Add categories for your annotations</p>
-      <p><a class="btn btn-outline-secondary" href="http://getbootstrap.com/">Official website &raquo;</a></p>
+      <h2><i class="fa fa-play-circle"></i> How to use this site</h2>
+      <p><a class="btn btn-outline-secondary"
+      href={{ url_for('public.quick_start')}}> Read the quick start &raquo;</a></p>
     </div>
-    <div class="col-lg-4">
-      <h2><i class="fa fa-flask"></i> SQLAlchemy</h2>
-      <p>SQLAlchemy is the Python SQL toolkit and Object Relational Mapper that gives application developers the full power and flexibility of SQL.</p>
-      <p><a href="http://www.sqlalchemy.org/" class="btn btn-outline-secondary">Official website &raquo;</a></p>
-   </div>
     <div class="col-lg-4">
       <h2><i class="fa fa-edit"></i> WTForms</h2>
       <p>WTForms is a flexible forms validation and rendering library for python web development.</p>
