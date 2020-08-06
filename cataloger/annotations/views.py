@@ -6,18 +6,22 @@ from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, flash, url_for
 from flask_login import login_required
 
-from .forms import NewAnnotationForm, SearchAnnotationForm
-from .models import Annotation, Organism, Process
+from .forms import NewAnnotationForm, SearchAnnotationForm, NewCardForm
+from .models import Card, Organism, Process, Sample, Marker, Gene, Method
 
 
 classes = {
     "organisms": Organism,
     "processes": Process,
+    "samples": Sample,
+    "markers": Marker,
+    "genes": Gene,
+    "methods": Method,
 }
 
 
 blueprint = Blueprint(
-    "search_class", __name__, url_prefix="/class", static_folder="../static",
+    "cards", __name__, url_prefix="/cards", static_folder="../static",
 )
 
 
@@ -51,11 +55,11 @@ def search_annotation(cls):
 
 
 @blueprint.route(
-    "/new/",
+    "/new-term/",
     methods=["GET", "POST"],
     defaults={"cls": "organisms", "search_term": "pombe"},
 )
-@blueprint.route("/new/<cls>", methods=["GET", "POST"])
+@blueprint.route("/new-term/<cls>", methods=["GET", "POST"])
 @login_required
 def new_annotation(cls, search_term=None):
     """New annotation."""
@@ -99,3 +103,23 @@ def _format_label(term):
         return f"{label}: {short}"
     else:
         return label
+
+
+@blueprint.route(
+    "/new-card/", methods=["GET", "POST"],
+)
+@login_required
+def new_card():
+
+    form = NewCardForm()
+    if request.method == "POST":
+        card = Card(
+            title=form.title.data,
+            organism_id=form.select_organism.data,
+            process_id=form.select_process.data,
+            sample_id=form.select_sample.data,
+        )
+        flash(f"New card {card}")
+        return redirect("/")
+
+    return render_template("annotations/new_card.html", form=form)

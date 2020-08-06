@@ -22,7 +22,7 @@ class Card(PkModel):
 
     __tablename__ = "cards"
     title = Column(db.String(128), nullable=False)
-    user_id = reference_col("users", nullable=False)
+    user_id = reference_col("users", nullable=True)
     user = relationship("User", backref=__tablename__)
     organism_id = reference_col("organisms", nullable=False)
     organism = relationship("Organism", backref=__tablename__)
@@ -115,6 +115,23 @@ class Marker(Annotation):
     """
 
     __tablename__ = "markers"
+    user_id = reference_col("users", nullable=True)
+    ontology_id = reference_col("ontologies", nullable=True)
+    user = relationship("User", backref=__tablename__)
+    ontology = relationship("Ontology", backref=__tablename__)
+
+
+class Gene(Annotation):
+    """An gene (or its corresponding protein)
+
+    Examples
+    --------
+    - alpha-tubulin
+    - Myosin II
+    - CDC52
+    """
+
+    __tablename__ = "genes"
     user_id = reference_col("users", nullable=True)
     ontology_id = reference_col("ontologies", nullable=True)
     user = relationship("User", backref=__tablename__)

@@ -1,0 +1,46 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container">
+  <h1>Create a new card</h1>
+</div>
+
+<form action=""
+      class="form m-2 p-3"
+      method="post"
+      name="create_card">
+  <div class="col-md-4">
+    {{ form.csrf_token }}
+    <div class="row mt-2">
+      <label class="control-label mb-0">
+        <b> Title </b>
+      </label>
+      {{ form.title(class="form-control form-control-sm m-0") }}
+    </div>
+    <div class="row mt-2">
+      <label class="control-label mb-0">
+        <i class="fa fa-bug"></i> <b>Organism</b>
+      </label>
+      {{ form.select_organism(class="form-control form-control-sm m-0") }}
+    </div>
+    <div class="row mt-2">
+      <label class="control-label mb-0">
+        <i class="fa fa-flask"></i> <b>Sample</b>
+      </label>
+      {{ form.select_sample(class="form-control form-control-sm m-0") }}
+    </div>
+    <div class="row mt-2">
+      <label class="control-label mb-0">
+        <i class="fa fa-cogs"></i> <b>Process</b>
+      </label>
+      {{ form.select_process(class="form-control form-control-sm m-0") }}
+    </div>
+    <div class="row mt-2">
+      <label class="control-label mb-0">
+        <i class="fa fa-check"></i>
+      </label>
+      {{ form.submit() }}
+    </div>
+  </div>
+</form>
+
+{% endblock %}
