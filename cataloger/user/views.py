@@ -3,12 +3,15 @@
 from flask import Blueprint, render_template
 from flask_login import login_required
 
+from ..annotations.models import Card
+
 blueprint = Blueprint("user", __name__, url_prefix="/users", static_folder="../static")
 
 
 @blueprint.route("/")
 @login_required
-def members():
-    """List members."""
-    print("testing reset")
-    return render_template("users/members.html")
+def cards():
+    """List cards"""
+    cards = Card.query.all()
+
+    return render_template("users/cards.html", cards=cards)

@@ -69,7 +69,7 @@ def new_annotation(cls, search_term=None):
     suggestions = search_bioportal(search_term)
 
     if not suggestions:
-        flash("No results found, maybe reformulate?")
+        flash("No results found, maybe reformulate?", "error")
         return redirect("/")
 
     new_annotation_form = NewAnnotationForm()
@@ -115,11 +115,13 @@ def new_card():
     if request.method == "POST":
         card = Card(
             title=form.title.data,
+            user_id=1,
             organism_id=form.select_organism.data,
             process_id=form.select_process.data,
             sample_id=form.select_sample.data,
         )
-        flash(f"New card {card}")
+        flash(f"New card {card}", "success")
+        card.save()
         return redirect("/")
 
     return render_template("annotations/new_card.html", form=form)
