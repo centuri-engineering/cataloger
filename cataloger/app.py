@@ -44,16 +44,13 @@ def register_extensions(app):
     debug_toolbar.init_app(app)
     migrate.init_app(app, db)
     flask_static_digest.init_app(app)
-    return None
 
 
 def register_blueprints(app):
     """Register Flask blueprints."""
     app.register_blueprint(public.views.blueprint)
     app.register_blueprint(user.views.blueprint)
-    app.register_blueprint(annotations.views.search_blueprint)
-    app.register_blueprint(annotations.views.new_blueprint)
-    return None
+    app.register_blueprint(annotations.views.blueprint)
 
 
 def register_errorhandlers(app):
@@ -67,7 +64,6 @@ def register_errorhandlers(app):
 
     for errcode in [401, 404, 500]:
         app.errorhandler(errcode)(render_error)
-    return None
 
 
 def register_shellcontext(app):

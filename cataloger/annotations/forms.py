@@ -10,3 +10,4 @@ class SearchAnnotationForm(FlaskForm):
 
 class NewAnnotationForm(FlaskForm):
     select_term = SelectField("Select the best match", choices=[])
+    submit = SubmitField("ok")
