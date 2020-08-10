@@ -31,6 +31,19 @@ class Card(PkModel):
     sample_id = reference_col("samples", nullable=True)
     sample = relationship("Sample", backref=__tablename__)
 
+    def as_csv(self):
+
+        fname = "omero_annotations.csv"
+        lines = [
+            f"# {self.title}",
+            f"# by {self.user.full_name}",
+            f"organism,{self.organism.label}",
+            f"sample,{self.sample.label}",
+            f"process,{self.process.label}",
+            "\n",
+        ]
+        return "\n".join(lines)
+
 
 class Ontology(PkModel):
     """One of bioportal ontologies

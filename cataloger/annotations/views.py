@@ -1,9 +1,18 @@
 # -*- coding: utf-8 -*-
 """annotation views."""
 import requests
+import tempfile
 from datetime import datetime
 
-from flask import Blueprint, render_template, request, redirect, flash, url_for
+from flask import (
+    Blueprint,
+    render_template,
+    request,
+    redirect,
+    flash,
+    url_for,
+    send_file,
+)
 from flask_login import login_required
 
 from .forms import NewAnnotationForm, SearchAnnotationForm, NewCardForm
@@ -125,3 +134,16 @@ def new_card():
         return redirect("/")
 
     return render_template("annotations/new_card.html", form=form)
+
+
+@blueprint.route(
+    "/download", methods=["GET"],
+)
+@login_required
+def download_card():
+    card = Card.query.filter_by(id=1).first()
+    _, tmp_csv = tempfile.mkstemp(suffix=".csv")
+    with open(tmp_csv, "w") as fh:
+        fh.write(card.as_csv())
+        fh.seek(0)
+    send_file(tmp_csv, as_attachment=True, attachment_filename="annotation.csv")

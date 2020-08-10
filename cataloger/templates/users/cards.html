@@ -3,7 +3,7 @@
 <div class="container">
   <h1>Welcome {{ current_user.username }}</h1>
   <h2>Here are the available cards</h2>
-  <div class="card-deck mb-3 text-center">
+  <div class="card-columns">
     {% for card in cards %}
       {% include('annotations/card_item.html') %}
     {% endfor %}

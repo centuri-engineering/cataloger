@@ -15,14 +15,21 @@
 <div class="container">
   <div class="row">
     <div class="col-lg-4">
-      <h2><i class="fa fa-play-circle"></i> How to use this site?</h2>
+      <h2><i class="fa fa-play-circle"></i> Learn how to use this site</h2>
+      <p>A quick tutorial on the basics of cataloger</p>
       <p><a class="btn btn-outline-secondary"
       href={{ url_for('public.quick_start')}}> Read the quick start &raquo;</a></p>
     </div>
     <div class="col-lg-4">
-      <h2><i class="fa fa-edit"></i> WTForms</h2>
-      <p>WTForms is a flexible forms validation and rendering library for python web development.</p>
-      <p><a href="http://wtforms.simplecodes.com/" class="btn btn-outline-secondary">Official website &raquo;</a></p>
+      <h2><i class="fa fa-play-circle"></i> Browse your cards </h2>
+      <p>See and search the cards already available</p>
+      <p><a class="btn btn-outline-secondary"
+      href={{ url_for('user.cards')}}> Go see your deck! &raquo;</a></p>
+    </div>
+    <div class="col-lg-4">
+      <h2><i class="fa fa-edit"></i> Create a new card </h2>
+      <p> Add a new experiment card to your deck </p>
+      <p><a href={{ url_for('cards.new_card') }} class="btn btn-outline-secondary"> Go here! &raquo;</a></p>
     </div>
   </div><!-- /.row -->
 </div>

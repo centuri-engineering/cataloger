@@ -1,21 +1,24 @@
 {% block content %}
-<div class="container">
-  <div class="card mb-4 shadow-sm">
-    <div class="card-header">
-      <h4 class="my-0 font-weight-normal"> {{ card.id }} </h4>
-    </div>
-    <div class="card-body">
-      <h1 class="card-title pricing-card-title"> {{ card.title }} </h1>
-      <ul class="list-unstyled mt-3 mb-4">
-        <li><i class="fa fa-bug"></i> {{ card.organism }}
-        </li>
-        <li><i class="fa fa-flask"></i> {{ card.sample }}
-        </li>
-        <li><i class="fa fa-cogs"></i> {{ card.process }}
-        </li>
-      </ul>
-      <button type="button" class="btn btn-lg btn-block btn-outline-primary">edit</button>
-    </div>
+<div class="card mb-4 shadow-sm" style="width: 24rem;">
+  <div class="card-header">
+    <h4 class="my-0 font-weight-normal"> {{ card.id }} </h4>
+  </div>
+  <div class="card-body">
+    <h1 class="card-title pricing-card-title"> {{ card.title }} </h1>
+    <ul class="list-group list-group-flush mt-3 mb-4 text-left">
+      <li class="list-group-item"><i class="fa fa-bug"></i> {{ card.organism.label }}
+      </li>
+      <li class="list-group-item"><i class="fa fa-flask"></i> {{ card.sample.label }}
+      </li>
+      <li class="list-group-item"><i class="fa fa-cogs"></i> {{ card.process.label }}
+      </li>
+    </ul>
+    <button
+      type="button"
+      class="btn btn-lg btn-block btn-outline-primary"
+      style="width: 5rem;"
+      href={{ url_for('cards.download_card') }}>
+      <i class="fa fa-download"></i></button>
   </div>
 </div>
 {% endblock %}
