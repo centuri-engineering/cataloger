@@ -137,13 +137,15 @@ def new_card():
 
 
 @blueprint.route(
-    "/download", methods=["GET"],
+    "/download/<card_id>", methods=["GET"],
 )
 @login_required
-def download_card():
-    card = Card.query.filter_by(id=1).first()
+def download_card(card_id):
+    card = Card.query.filter_by(id=card_id).first()
     _, tmp_csv = tempfile.mkstemp(suffix=".csv")
     with open(tmp_csv, "w") as fh:
         fh.write(card.as_csv())
         fh.seek(0)
-    send_file(tmp_csv, as_attachment=True, attachment_filename="annotation.csv")
+    return send_file(
+        tmp_csv, as_attachment=True, attachment_filename="omero_annotation.csv"
+    )

@@ -13,12 +13,13 @@
       <li class="list-group-item"><i class="fa fa-cogs"></i> {{ card.process.label }}
       </li>
     </ul>
-    <button
-      type="button"
-      class="btn btn-lg btn-block btn-outline-primary"
-      style="width: 5rem;"
-      href={{ url_for('cards.download_card') }}>
+    <a href={{ url_for('cards.download_card', card_id=card.id) }} target="blank">
+      <button
+        type="button"
+        class="btn btn-lg btn-block btn-outline-primary"
+        style="width: 5rem;">
       <i class="fa fa-download"></i></button>
+    </a>
   </div>
 </div>
 {% endblock %}
