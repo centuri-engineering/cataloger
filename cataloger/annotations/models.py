@@ -12,6 +12,16 @@ from cataloger.database import (
 
 from ..user.models import User
 
+"""Many to many tables
+"""
+
+marker_card = db.Table(
+    "marker_card",
+    db.Model.metadata,
+    Column("marker_id", db.Integer, db.ForeignKey("markers.id")),
+    Column("card_id", db.Integer, db.ForeignKey("cards.id")),
+)
+
 
 class Card(PkModel):
     """A card is a collection of annotations
@@ -30,6 +40,8 @@ class Card(PkModel):
     process = relationship("Process", backref=__tablename__)
     sample_id = reference_col("samples", nullable=True)
     sample = relationship("Sample", backref=__tablename__)
+    created_at = Column(db.DateTime, nullable=True, default=dt.datetime.utcnow)
+    markers = relationship("Marker", secondary=marker_card)
 
     def as_csv(self):
 
@@ -123,6 +135,22 @@ class Sample(Annotation):
     ontology = relationship("Ontology", backref=__tablename__)
 
 
+class Method(Annotation):
+    """An experimental method
+
+    Examples
+    --------
+    - optical tweezers
+    - laser ablation
+    """
+
+    __tablename__ = "methods"
+    user_id = reference_col("users", nullable=True)
+    ontology_id = reference_col("ontologies", nullable=True)
+    user = relationship("User", backref=__tablename__)
+    ontology = relationship("Ontology", backref=__tablename__)
+
+
 class Marker(Annotation):
     """A fluorescent marker or other contrast agent
     """
@@ -145,22 +173,6 @@ class Gene(Annotation):
     """
 
     __tablename__ = "genes"
-    user_id = reference_col("users", nullable=True)
-    ontology_id = reference_col("ontologies", nullable=True)
-    user = relationship("User", backref=__tablename__)
-    ontology = relationship("Ontology", backref=__tablename__)
-
-
-class Method(Annotation):
-    """An experimental method
-
-    Examples
-    --------
-    - optical tweezers
-    - laser ablation
-    """
-
-    __tablename__ = "methods"
     user_id = reference_col("users", nullable=True)
     ontology_id = reference_col("ontologies", nullable=True)
     user = relationship("User", backref=__tablename__)
