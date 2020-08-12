@@ -12,8 +12,9 @@ from flask import (
     flash,
     url_for,
     send_file,
+    session,
 )
-from flask_login import login_required
+from flask_login import login_required, current_user
 
 from .forms import NewAnnotationForm, SearchAnnotationForm, NewCardForm
 from .models import Card, Organism, Process, Sample, Marker, Gene, Method
@@ -119,17 +120,27 @@ def _format_label(term):
 )
 @login_required
 def new_card():
+    """Creates a card
 
+    """
     form = NewCardForm()
+    if form.add_marker.data:
+        form.select_markers.append_entry()
+        return render_template("annotations/new_card.html", form=form)
+
     if request.method == "POST":
         card = Card(
             title=form.title.data,
-            user_id=1,
+            user_id=current_user.id,
             organism_id=form.select_organism.data,
             process_id=form.select_process.data,
             sample_id=form.select_sample.data,
+            markers=[
+                Marker.get_by_id(m.select_marker.data)
+                for m in form.select_markers.entries
+            ],
         )
-        flash(f"New card {card.title}", "success")
+        flash(f"New card {card.title} created by user {current_user.id}", "success")
         card.save()
         return redirect("/")
 

@@ -1,9 +1,9 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="container">
-  <h1>Welcome {{ current_user.username }}</h1>
-  <h2>Here are the available cards</h2>
-  <div class="card-columns">
+  <h3>Here are the available cards</h3>
+  <hr>
+  <div class="card-deck">
     {% for card in cards %}
       {% include('annotations/card_item.html') %}
     {% endfor %}

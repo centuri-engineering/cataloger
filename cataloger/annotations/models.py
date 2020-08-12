@@ -46,14 +46,16 @@ class Card(PkModel):
     def as_csv(self):
 
         fname = "omero_annotations.csv"
+        username = self.user.full_name if self.user.first_name else self.user.username
         lines = [
             f"# {self.title}",
-            f"# by {self.user.full_name}",
+            f"# {self.created_at}",
+            f"# by {username}",
             f"organism,{self.organism.label}",
             f"sample,{self.sample.label}",
             f"process,{self.process.label}",
-            "\n",
         ]
+        lines += [f"marker_{i},{m.label}" for i, m in enumerate(self.markers)]
         return "\n".join(lines)
 
 

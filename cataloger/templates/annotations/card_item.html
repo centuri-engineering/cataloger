@@ -1,5 +1,5 @@
 {% block content %}
-<div class="card mb-4 shadow-sm" style="width: 24rem;">
+<div class="card mb-4 shadow-sm" style="min-width: 20rem;">
   <div class="card-header">
     <h4 class="my-0 font-weight-normal"> {{ card.id }} </h4>
   </div>
@@ -13,12 +13,14 @@
       <li class="list-group-item"><i class="fa fa-cogs"></i> {{ card.process.label }}
       </li>
     </ul>
+  </div>
+  <div class="card-footer text-muted">
     <a href={{ url_for('cards.download_card', card_id=card.id) }} target="blank">
       <button
         type="button"
         class="btn btn-lg btn-block btn-outline-primary"
         style="width: 5rem;">
-      <i class="fa fa-download"></i></button>
+        <i class="fa fa-download"></i></button>
     </a>
   </div>
 </div>
