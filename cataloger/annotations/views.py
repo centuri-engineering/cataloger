@@ -91,8 +91,8 @@ def new_annotation(cls, search_term=None):
         term = suggestions[term_id]
         new = classes[cls](label=term["prefLabel"], bioportal_id=term["@id"])
         new.save()
-        flash(f"Saved new term {new}")
-        return redirect("/")
+        flash(f"Saved new term {new.label}", "success")
+        return redirect(url_for("cards.new_card"))
 
     return render_template(
         "annotations/new_annotation.html", form=new_annotation_form, cls=cls
@@ -129,7 +129,7 @@ def new_card():
             process_id=form.select_process.data,
             sample_id=form.select_sample.data,
         )
-        flash(f"New card {card}", "success")
+        flash(f"New card {card.title}", "success")
         card.save()
         return redirect("/")
 

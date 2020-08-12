@@ -20,6 +20,7 @@ class NewCardForm(FlaskForm):
     select_organism = SelectField("Organism")
     select_process = SelectField("Process")
     select_sample = SelectField("Sample")
+    select_marker = SelectField("Marker")
     submit = SubmitField("ok")
 
     def __init__(self, *args, **kwargs):
@@ -27,3 +28,4 @@ class NewCardForm(FlaskForm):
         self.select_organism.choices = [(o.id, o.label) for o in Organism.query.all()]
         self.select_sample.choices = [(s.id, s.label) for s in Sample.query.all()]
         self.select_process.choices = [(p.id, p.label) for p in Process.query.all()]
+        self.select_marker.choices = [(p.id, p.label) for p in Marker.query.all()]
