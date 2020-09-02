@@ -16,11 +16,11 @@ from flask import (
 )
 from flask_login import login_required, current_user
 
-from .forms import NewAnnotationForm, SearchAnnotationForm, NewCardForm
+from .forms import NewAnnotationForm, SearchAnnotationForm, NewCardForm, EditCardForm
 from .models import Card, Organism, Process, Sample, Marker, Gene, Method
 
 # TODO store this as a secret, duh
-API_KEY =  "3d441415-6164-487b-8ec3-1be7d9fd7383"
+API_KEY = "3d441415-6164-487b-8ec3-1be7d9fd7383"
 
 classes = {
     "organisms": Organism,
@@ -33,13 +33,15 @@ classes = {
 
 
 blueprint = Blueprint(
-    "cards", __name__, url_prefix="/cards", static_folder="../static",
+    "cards",
+    __name__,
+    url_prefix="/cards",
+    static_folder="../static",
 )
 
 
 def search_bioportal(search_text, **other_params):
-    """Searches the bioontology database for the term search_text
-    """
+    """Searches the bioontology database for the term search_text"""
 
     params = {
         "apikey": API_KEY,
@@ -105,7 +107,9 @@ def _format_label(term):
     label = term["prefLabel"]
     ontology_id = term["links"]["ontology"]
     try:
-        ontology = requests.get(ontology_id, params={"apikey":API_KEY} ).json()["acronym"]
+        ontology = requests.get(ontology_id, params={"apikey": API_KEY}).json()[
+            "acronym"
+        ]
     except Exception:
         ontology = ""
     definition = term.get("definition")
@@ -120,6 +124,7 @@ def _format_label(term):
     else:
         return f"{label} \t ({ontology})"
 
+
 @blueprint.route("/")
 @login_required
 def cards():
@@ -129,13 +134,12 @@ def cards():
 
 
 @blueprint.route(
-    "/new-card/", methods=["GET", "POST"],
+    "/new-card/",
+    methods=["GET", "POST"],
 )
 @login_required
 def new_card():
-    """Creates a card
-
-    """
+    """Creates a card"""
     form = NewCardForm()
     if form.add_marker.data:
         form.select_markers.append_entry()
@@ -144,7 +148,6 @@ def new_card():
         form.select_markers.pop_entry()
         return render_template("annotations/new_card.html", form=form)
 
-
     if form.add_gene.data:
         form.select_genes.append_entry()
         return render_template("annotations/new_card.html", form=form)
@@ -152,7 +155,7 @@ def new_card():
         form.select_genes.pop_entry()
         return render_template("annotations/new_card.html", form=form)
 
-    #if form.validate_on_submit():
+    # if form.validate_on_submit():
     if request.method == "POST":
         card = Card(
             title=form.title.data,
@@ -166,20 +169,83 @@ def new_card():
                 for m in form.select_markers.entries
             ],
             genes=[
-                Gene.get_by_id(m.select_gene.data)
-                for m in form.select_genes.entries
+                Gene.get_by_id(m.select_gene.data) for m in form.select_genes.entries
             ],
         )
         flash(f"New card {card.title} created by user {current_user.id}", "success")
         card.save()
-        return redirect("/")
-    else:
-        flash("Incomplete form"+" ".join((f"{k}: {v}" for k, v in form.errors.items())), "error")
+        return redirect("/users")
     return render_template("annotations/new_card.html", form=form)
 
 
 @blueprint.route(
-    "/download/<card_id>", methods=["GET"],
+    "/edit/<card_id>",
+    methods=["GET", "POST"],
+)
+@login_required
+def edit_card(card_id):
+    card = Card.query.filter_by(id=card_id).first()
+    form = EditCardForm(card_id=card_id)
+
+    for marker in card.markers:
+        mrk = form.select_markers.append_entry()
+        mrk.select_marker.data = marker.id
+    for gene in card.genes:
+        gne = form.select_genes.append_entry()
+        gne.select_gene.data = gene.id
+
+    if form.add_marker.data:
+        form.select_markers.append_entry()
+        return render_template("annotations/new_card.html", form=form)
+    if form.remove_marker.data and len(form.select_markers):
+        form.select_markers.pop_entry()
+        return render_template("annotations/new_card.html", form=form)
+
+    if form.add_gene.data:
+        form.select_genes.append_entry()
+        return render_template("annotations/new_card.html", form=form)
+    if form.remove_gene.data and len(form.select_genes):
+        form.select_genes.pop_entry()
+        return render_template("annotations/new_card.html", form=form)
+
+    # if form.validate_on_submit():
+    if request.method == "POST":
+        card.update(
+            title=form.title.data,
+            user_id=current_user.id,
+            organism_id=form.select_organism.data,
+            process_id=form.select_process.data,
+            sample_id=form.select_sample.data,
+            comment=form.comment.data,
+            markers=[
+                Marker.get_by_id(m.select_marker.data)
+                for m in form.select_markers.entries
+            ],
+            genes=[
+                Gene.get_by_id(m.select_gene.data) for m in form.select_genes.entries
+            ],
+        )
+        card.save()
+        flash(f"Edited {card.title} by user {current_user.id}", "success")
+        return redirect("/users")
+
+    # executed only if no edition
+    form.title.data = card.title
+    form.select_organism.data = card.organism_id
+    form.select_process.data = card.process_id
+    form.select_sample.data = card.sample_id
+    form.comment.data = card.comment
+
+    while len(form.select_markers):
+        form.select_markers.pop_entry()
+    while len(form.select_genes):
+        form.select_genes.pop_entry()
+    return render_template("annotations/new_card.html", form=form)
+
+
+@blueprint.route(
+    "/download/<card_id>",
+    methods=["GET"],
 )
 @login_required
 def download_card(card_id):

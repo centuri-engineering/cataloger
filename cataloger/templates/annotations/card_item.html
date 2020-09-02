@@ -15,13 +15,31 @@
     </ul>
   </div>
   <div class="card-footer text-muted">
-    <a href={{ url_for('cards.download_card', card_id=card.id) }} target="blank">
-      <button
-        type="button"
-        class="btn btn-lg btn-block btn-outline-primary"
-        style="width: 5rem;">
-        <i class="fa fa-download"></i></button>
-    </a>
+    <div class="row">
+      <div
+        class="col"
+        href={{ url_for('cards.download_card', card_id=card.id) }}
+        target="blank">
+        <button
+          type="button"
+          class="btn btn-lg btn-block btn-outline-primary"
+          style="width: 5rem;"
+          title="Download card for annotation">
+          <i class="fa fa-download"></i>
+        </button>
+      </div>
+      <div class="col">
+        <a href={{ url_for('cards.edit_card', card_id=card.id) }}>
+          <button
+            type="button"
+            class="btn btn-lg btn-block btn-outline-primary"
+            style="width: 5rem;"
+            title="Edit Card">
+          <i class="fa fa-edit"></i>
+          </button>
+        </a>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}

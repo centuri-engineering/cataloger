@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, SelectField, SubmitField, FieldList, FormField
 from wtforms.validators import DataRequired, Length
-from .models import Organism, Process, Sample, Marker, Gene, Method
+from .models import Card, Organism, Process, Sample, Marker, Gene, Method
 
 
 class SearchAnnotationForm(FlaskForm):
@@ -21,12 +21,14 @@ class MarkerForm(FlaskForm):
         super().__init__(*args, **kwargs)
         self.select_marker.choices = [(p.id, p.label) for p in Marker.query.all()]
 
+
 class GeneForm(FlaskForm):
     select_gene = SelectField("Gene")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.select_gene.choices = [(p.id, p.label) for p in Gene.query.all()]
+
 
 class NewCardForm(FlaskForm):
 
@@ -50,3 +52,9 @@ class NewCardForm(FlaskForm):
         self.select_organism.choices = [(o.id, o.label) for o in Organism.query.all()]
         self.select_sample.choices = [(s.id, s.label) for s in Sample.query.all()]
         self.select_process.choices = [(p.id, p.label) for p in Process.query.all()]
+
+
+class EditCardForm(NewCardForm):
+    def __init__(self, card_id, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.card_id = card_id
