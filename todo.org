@@ -1,27 +1,21 @@
-** Templates
-- annotations page
-
-** Home
-- Add links to annotations
-
 ** routing
-
 - integrate search to new card form
-- don't re-route when no result is found
+- route to own cards once a new card is created
 
 ** forms
 
+- add comment field to new_card form
 - search cards
 - edit card
 
 ** models
 
-- add free text to Card model
 - add card download as rich text
-- many-to-one ontology relationship
-- integrate genes / proteins
+
+** views
+
+- delete / edit cards
 
 ** templates
 
-- display ontology in search results
 - card_item : add delete & edit buttons

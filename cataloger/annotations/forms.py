@@ -21,17 +21,29 @@ class MarkerForm(FlaskForm):
         super().__init__(*args, **kwargs)
         self.select_marker.choices = [(p.id, p.label) for p in Marker.query.all()]
 
+class GeneForm(FlaskForm):
+    select_gene = SelectField("Gene")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.select_gene.choices = [(p.id, p.label) for p in Gene.query.all()]
 
 class NewCardForm(FlaskForm):
 
     title = StringField("Card title")
+    comment = StringField("Comment")
     select_organism = SelectField("Organism")
     select_process = SelectField("Process")
     select_sample = SelectField("Sample")
     select_markers = FieldList(FormField(MarkerForm))
     add_marker = SubmitField("+")
+    remove_marker = SubmitField("-")
 
-    submit = SubmitField("ok")
+    select_genes = FieldList(FormField(GeneForm))
+    add_gene = SubmitField("+")
+    remove_gene = SubmitField("-")
+
+    submit = SubmitField("save")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -2,6 +2,9 @@
 """User models."""
 import datetime as dt
 
+from sqlalchemy.exc import OperationalError
+
+
 from cataloger.database import (
     Column,
     PkModel,
@@ -22,6 +25,13 @@ marker_card = db.Table(
     Column("card_id", db.Integer, db.ForeignKey("cards.id")),
 )
 
+gene_card = db.Table(
+    "gene_card",
+    db.Model.metadata,
+    Column("gene_id", db.Integer, db.ForeignKey("genes.id")),
+    Column("card_id", db.Integer, db.ForeignKey("cards.id")),
+)
+
 
 class Card(PkModel):
     """A card is a collection of annotations
@@ -32,7 +42,7 @@ class Card(PkModel):
 
     __tablename__ = "cards"
     title = Column(db.String(128), nullable=False)
-    user_id = reference_col("users", nullable=True)
+    user_id = reference_col("users", nullable=False)
     user = relationship("User", backref=__tablename__)
     organism_id = reference_col("organisms", nullable=False)
     organism = relationship("Organism", backref=__tablename__)
@@ -42,6 +52,8 @@ class Card(PkModel):
     sample = relationship("Sample", backref=__tablename__)
     created_at = Column(db.DateTime, nullable=True, default=dt.datetime.utcnow)
     markers = relationship("Marker", secondary=marker_card)
+    genes = relationship("Gene", secondary=gene_card)
+    comment = Column(db.String, nullable=True)
 
     def as_csv(self):
 
@@ -51,11 +63,17 @@ class Card(PkModel):
             f"# {self.title}",
             f"# {self.created_at}",
             f"# by {username}",
+            f"# ",
+            f"# {self.comment}",
             f"organism,{self.organism.label}",
             f"sample,{self.sample.label}",
             f"process,{self.process.label}",
         ]
         lines += [f"marker_{i},{m.label}" for i, m in enumerate(self.markers)]
+        try:
+            lines += [f"gene_{i},{g.label}" for i, g in enumerate(self.genes)]
+        except OperationalError:
+            pass
         return "\n".join(lines)
 
 
@@ -165,7 +183,7 @@ class Marker(Annotation):
 
 
 class Gene(Annotation):
-    """An gene (or its corresponding protein)
+    """A gene (or its corresponding protein)
 
     Examples
     --------

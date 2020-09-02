@@ -19,6 +19,8 @@ from flask_login import login_required, current_user
 from .forms import NewAnnotationForm, SearchAnnotationForm, NewCardForm
 from .models import Card, Organism, Process, Sample, Marker, Gene, Method
 
+# TODO store this as a secret, duh
+API_KEY =  "3d441415-6164-487b-8ec3-1be7d9fd7383"
 
 classes = {
     "organisms": Organism,
@@ -40,8 +42,7 @@ def search_bioportal(search_text, **other_params):
     """
 
     params = {
-        # TODO store this as a secret, duh
-        "apikey": "3d441415-6164-487b-8ec3-1be7d9fd7383",
+        "apikey": API_KEY,
         "q": search_text,
         "suggest": True,
     }
@@ -102,17 +103,29 @@ def new_annotation(cls, search_term=None):
 
 def _format_label(term):
     label = term["prefLabel"]
-
+    ontology_id = term["links"]["ontology"]
+    try:
+        ontology = requests.get(ontology_id, params={"apikey":API_KEY} ).json()["acronym"]
+    except Exception:
+        ontology = ""
     definition = term.get("definition")
+
     if definition:
         split = definition[0].split()
-        if len(split) > 30:
-            short = " ".join(split[:30]) + "..."
+        if len(split) > 20:
+            short = " ".join(split[:20]) + "..."
         else:
             short = definition
-        return f"{label}: {short}"
+        return f"{label}: {short} \t ({ontology})"
     else:
-        return label
+        return f"{label} \t ({ontology})"
+
+@blueprint.route("/")
+@login_required
+def cards():
+    """List all cards"""
+    cards = Card.query.all()
+    return render_template("annotations/cards.html", cards=cards)
 
 
 @blueprint.route(
@@ -127,7 +140,19 @@ def new_card():
     if form.add_marker.data:
         form.select_markers.append_entry()
         return render_template("annotations/new_card.html", form=form)
+    if form.remove_marker.data and len(form.select_markers):
+        form.select_markers.pop_entry()
+        return render_template("annotations/new_card.html", form=form)
 
+
+    if form.add_gene.data:
+        form.select_genes.append_entry()
+        return render_template("annotations/new_card.html", form=form)
+    if form.remove_gene.data and len(form.select_genes):
+        form.select_genes.pop_entry()
+        return render_template("annotations/new_card.html", form=form)
+
+    #if form.validate_on_submit():
     if request.method == "POST":
         card = Card(
             title=form.title.data,
@@ -135,15 +160,21 @@ def new_card():
             organism_id=form.select_organism.data,
             process_id=form.select_process.data,
             sample_id=form.select_sample.data,
+            comment=form.comment.data,
             markers=[
                 Marker.get_by_id(m.select_marker.data)
                 for m in form.select_markers.entries
+            ],
+            genes=[
+                Gene.get_by_id(m.select_gene.data)
+                for m in form.select_genes.entries
             ],
         )
         flash(f"New card {card.title} created by user {current_user.id}", "success")
         card.save()
         return redirect("/")
-
+    else:
+        flash("Incomplete form"+" ".join((f"{k}: {v}" for k, v in form.errors.items())), "error")
     return render_template("annotations/new_card.html", form=form)
 
 
