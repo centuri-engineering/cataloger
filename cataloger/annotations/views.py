@@ -187,13 +187,6 @@ def edit_card(card_id):
     card = Card.query.filter_by(id=card_id).first()
     form = EditCardForm(card_id=card_id)
 
-    for marker in card.markers:
-        mrk = form.select_markers.append_entry()
-        mrk.select_marker.data = marker.id
-    for gene in card.genes:
-        gne = form.select_genes.append_entry()
-        gne.select_gene.data = gene.id
-
     if form.add_marker.data:
         form.select_markers.append_entry()
         return render_template("annotations/new_card.html", form=form)
@@ -229,7 +222,7 @@ def edit_card(card_id):
         flash(f"Edited {card.title} by user {current_user.id}", "success")
         return redirect("/users")
 
-    # executed only if no edition
+    # executed only with a GET
     form.title.data = card.title
     form.select_organism.data = card.organism_id
     form.select_process.data = card.process_id
@@ -240,6 +233,14 @@ def edit_card(card_id):
         form.select_markers.pop_entry()
     while len(form.select_genes):
         form.select_genes.pop_entry()
+
+    for marker in card.markers:
+        mrk = form.select_markers.append_entry()
+        mrk.select_marker.data = marker.id
+    for gene in card.genes:
+        gne = form.select_genes.append_entry()
+        gne.select_gene.data = gene.id
+
     return render_template("annotations/new_card.html", form=form)
 
 

@@ -1,13 +1,12 @@
 ** routing
 
 - integrate search to new card form
-- route to own cards once a new card is created
 
 ** forms
 
 - add comment field to new_card form
 - search cards
-- clone card
+- clone card & restrict edit to owner
 
 ** models
 
@@ -15,15 +14,17 @@
 
 ** views
 
+- complete card view with the other elements
 - delete / edit cards
 
 ** templates
 
-- card_item : add delete & edit buttons
+- card_item : add delete & clone buttons
 
 ** whish list
 
-- import card from omero
+- add group logic
+- import card from omero to annotate
 - link to omero from card
 - restrict ontologies (process, sample  GO)
 - restrict further choices to organism
