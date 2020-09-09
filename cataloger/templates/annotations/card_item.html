@@ -12,6 +12,10 @@
       </li>
       <li class="list-group-item"><i class="fa fa-cogs"></i> {{ card.process.label }}
       </li>
+      {% if card.comment %}
+      <li class="list-group-item"><i class="fa fa-comment"></i> {{ card.comment }}
+      </li>
+      {% endif %}
     </ul>
   </div>
   <div class="card-footer text-muted">

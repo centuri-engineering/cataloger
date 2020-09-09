@@ -10,6 +10,7 @@
 
 ** models
 
+- restrict further choices to organism
 - add card download as rich text / print
 
 ** views
@@ -27,4 +28,4 @@
 - import card from omero to annotate
 - link to omero from card
 - restrict ontologies (process, sample  GO)
-- restrict further choices to organism
+- illustrate (wikipedia query?)

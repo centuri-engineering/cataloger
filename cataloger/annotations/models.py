@@ -50,6 +50,8 @@ class Card(PkModel):
     process = relationship("Process", backref=__tablename__)
     sample_id = reference_col("samples", nullable=True)
     sample = relationship("Sample", backref=__tablename__)
+    method_id = reference_col("methods", nullable=True)
+    method = relationship("Method", backref=__tablename__)
     created_at = Column(db.DateTime, nullable=True, default=dt.datetime.utcnow)
     markers = relationship("Marker", secondary=marker_card)
     genes = relationship("Gene", secondary=gene_card)
@@ -63,7 +65,7 @@ class Card(PkModel):
             f"# {self.title}",
             f"# {self.created_at}",
             f"# by {username}",
-            f"# ",
+            "# ",
             f"# {self.comment}",
             f"organism,{self.organism.label}",
             f"sample,{self.sample.label}",
@@ -78,8 +80,7 @@ class Card(PkModel):
 
 
 class Ontology(PkModel):
-    """One of bioportal ontologies
-    """
+    """One of bioportal ontologies"""
 
     __tablename__ = "ontologies"
     acronym = Column(db.String(30), nullable=False)
@@ -135,6 +136,8 @@ class Process(Annotation):
     ontology_id = reference_col("ontologies", nullable=True)
     user = relationship("User", backref=__tablename__)
     ontology = relationship("Ontology", backref=__tablename__)
+    organism_id = reference_col("organisms", nullable=False)
+    organism = relationship("Organism", backref=__tablename__)
 
 
 class Sample(Annotation):
@@ -153,6 +156,8 @@ class Sample(Annotation):
     ontology_id = reference_col("ontologies", nullable=True)
     user = relationship("User", backref=__tablename__)
     ontology = relationship("Ontology", backref=__tablename__)
+    organism_id = reference_col("organisms", nullable=False)
+    organism = relationship("Organism", backref=__tablename__)
 
 
 class Method(Annotation):
@@ -162,6 +167,7 @@ class Method(Annotation):
     --------
     - optical tweezers
     - laser ablation
+    - FISH
     """
 
     __tablename__ = "methods"
@@ -172,14 +178,15 @@ class Method(Annotation):
 
 
 class Marker(Annotation):
-    """A fluorescent marker or other contrast agent
-    """
+    """A fluorescent marker or other contrast agent"""
 
     __tablename__ = "markers"
     user_id = reference_col("users", nullable=True)
     ontology_id = reference_col("ontologies", nullable=True)
     user = relationship("User", backref=__tablename__)
     ontology = relationship("Ontology", backref=__tablename__)
+    organism_id = reference_col("organisms", nullable=False)
+    organism = relationship("Organism", backref=__tablename__)
 
 
 class Gene(Annotation):
@@ -197,3 +204,5 @@ class Gene(Annotation):
     ontology_id = reference_col("ontologies", nullable=True)
     user = relationship("User", backref=__tablename__)
     ontology = relationship("Ontology", backref=__tablename__)
+    organism_id = reference_col("organisms", nullable=False)
+    organism = relationship("Organism", backref=__tablename__)

@@ -1,5 +1,12 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SelectField, SubmitField, FieldList, FormField
+from wtforms import (
+    StringField,
+    SelectField,
+    SubmitField,
+    FieldList,
+    FormField,
+    TextAreaField,
+)
 from wtforms.validators import DataRequired, Length
 from .models import Card, Organism, Process, Sample, Marker, Gene, Method
 
@@ -33,7 +40,7 @@ class GeneForm(FlaskForm):
 class NewCardForm(FlaskForm):
 
     title = StringField("Card title")
-    comment = StringField("Comment")
+    comment = TextAreaField("Comment")
     select_organism = SelectField("Organism")
     select_process = SelectField("Process")
     select_sample = SelectField("Sample")
