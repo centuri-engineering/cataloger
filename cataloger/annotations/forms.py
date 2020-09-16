@@ -43,6 +43,7 @@ class NewCardForm(FlaskForm):
     comment = TextAreaField("Comment")
     select_organism = SelectField("Organism")
     select_process = SelectField("Process")
+    select_method = SelectField("Method")
     select_sample = SelectField("Sample")
     select_markers = FieldList(FormField(MarkerForm))
     add_marker = SubmitField("+")
@@ -59,6 +60,7 @@ class NewCardForm(FlaskForm):
         self.select_organism.choices = [(o.id, o.label) for o in Organism.query.all()]
         self.select_sample.choices = [(s.id, s.label) for s in Sample.query.all()]
         self.select_process.choices = [(p.id, p.label) for p in Process.query.all()]
+        self.select_method.choices = [(m.id, m.label) for m in Method.query.all()]
 
 
 class EditCardForm(NewCardForm):

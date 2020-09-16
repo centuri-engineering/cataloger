@@ -1,3 +1,5 @@
+store API key in a secret (e.g. through ansible)
+
 ** routing
 
 - integrate search to new card form

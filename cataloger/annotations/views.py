@@ -39,6 +39,15 @@ blueprint = Blueprint(
     static_folder="../static",
 )
 
+ontologies = {
+    "organisms": ("NCBITAXON",),
+    "samples": ("GO", "MESH", "CLO", "FB-BT"),
+    "processes": ("GO",),
+    "methods": ("FBbi", "EDAM-BIOIMAGING"),
+    "genes": ("GO",),
+    "markers": None,  # ("FBbi", "EDAM-BIOIMAGING"),
+}
+
 
 def search_bioportal(search_text, **other_params):
     """Searches the bioontology database for the term search_text"""
@@ -79,11 +88,13 @@ def new_annotation(cls, search_term=None):
     if search_term is None:
         search_term = request.args.get("search_term")
 
-    suggestions = search_bioportal(search_term)
+    suggestions = search_bioportal(search_term, ontologies=ontologies[cls])
 
     if not suggestions:
-        flash("No results found, maybe reformulate?", "error")
-        return redirect("/")
+        flash("No results found, please reformulate your query :)", "warning")
+        form = SearchAnnotationForm()
+        form.search_term.data = search_term
+        return render_template("annotations/search_annotation.html", form=form, cls=cls)
 
     new_annotation_form = NewAnnotationForm()
     new_annotation_form.select_term.choices = [
@@ -93,7 +104,12 @@ def new_annotation(cls, search_term=None):
     if request.method == "POST":
         term_id = new_annotation_form.select_term.data
         term = suggestions[term_id]
-        new = classes[cls](label=term["prefLabel"], bioportal_id=term["@id"])
+        if cls in ("organisms", "methods"):
+            new = classes[cls](label=term["prefLabel"], bioportal_id=term["@id"])
+        else:
+            new = classes[cls](
+                label=term["prefLabel"], bioportal_id=term["@id"], organism_id=0
+            )
         new.save()
         flash(f"Saved new term {new.label}", "success")
         return redirect(url_for("cards.new_card"))
@@ -183,6 +199,11 @@ def new_card():
     methods=["GET", "POST"],
 )
 @login_required
+def delete_card(card_id):
+    card = Card.query.filter_by(id=card_id).first()
+
+
+@login_required
 def edit_card(card_id):
     card = Card.query.filter_by(id=card_id).first()
     form = EditCardForm(card_id=card_id)
@@ -209,6 +230,7 @@ def edit_card(card_id):
             organism_id=form.select_organism.data,
             process_id=form.select_process.data,
             sample_id=form.select_sample.data,
+            method_id=form.select_method.data,
             comment=form.comment.data,
             markers=[
                 Marker.get_by_id(m.select_marker.data)
