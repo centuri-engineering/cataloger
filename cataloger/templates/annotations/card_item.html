@@ -22,10 +22,11 @@
   </div>
   <div class="card-footer text-muted">
     <div class="row">
-      <div
-        class="col"
-        href={{ url_for('cards.download_card', card_id=card.id) }}
-        target="blank">
+      <div class="col">
+        <a
+          href={{ url_for('cards.download_card', card_id=card.id) }}
+          target="blank"
+        >
         <button
           type="button"
           class="btn btn-lg btn-block btn-outline-primary"
@@ -33,6 +34,7 @@
           title="Download card for annotation">
           <i class="fa fa-download"></i>
         </button>
+        </a>
       </div>
       <div class="col">
         <a href={{ url_for('cards.edit_card', card_id=card.id) }}>

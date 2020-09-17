@@ -194,15 +194,15 @@ def new_card():
     return render_template("annotations/new_card.html", form=form)
 
 
-@blueprint.route(
-    "/edit/<card_id>",
-    methods=["GET", "POST"],
-)
 @login_required
 def delete_card(card_id):
     card = Card.query.filter_by(id=card_id).first()
 
 
+@blueprint.route(
+    "/edit/<card_id>",
+    methods=["GET", "POST"],
+)
 @login_required
 def edit_card(card_id):
     card = Card.query.filter_by(id=card_id).first()

@@ -3,10 +3,10 @@ store API key in a secret (e.g. through ansible)
 ** routing
 
 - integrate search to new card form
+- set root directory env variable https://stackoverflow.com/questions/18967441/add-a-prefix-to-all-flask-routes
 
 ** forms
 
-- add comment field to new_card form
 - search cards
 - clone card & restrict edit to owner
 
