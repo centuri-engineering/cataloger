@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """User models."""
 import datetime as dt
+import yaml
 
 from sqlalchemy.exc import OperationalError
 
@@ -58,8 +59,7 @@ class Card(PkModel):
     comment = Column(db.String, nullable=True)
 
     def as_csv(self):
-
-        fname = "omero_annotations.csv"
+        """Writes the key - value pairs of the cards as CSV"""
         username = self.user.full_name if self.user.first_name else self.user.username
         lines = [
             f"# {self.title}",
@@ -69,14 +69,39 @@ class Card(PkModel):
             f"# {self.comment}",
             f"organism,{self.organism.label}",
             f"sample,{self.sample.label}",
+            f"method,{self.method.label}",
             f"process,{self.process.label}",
         ]
         lines += [f"marker_{i},{m.label}" for i, m in enumerate(self.markers)]
         try:
             lines += [f"gene_{i},{g.label}" for i, g in enumerate(self.genes)]
-        except OperationalError:
+        except OperationalError:  # TODO why?
             pass
         return "\n".join(lines)
+
+    def as_dict(self):
+        kv_pairs = {
+            "organism": self.organism.label,
+            "sample": self.sample.label,
+            "process": self.process.label,
+            "method": self.method.label,
+        }
+        kv_pairs.update({f"marker_{i}": m.label for i, m in enumerate(self.markers)})
+        kv_pairs.update({f"gene_{i}": g.label for i, g in enumerate(self.genes)})
+        tags = [w for w in self.comment.split() if w.startswith("#")]
+        card_dict = {
+            "title": self.title,
+            "created": self.created_at,
+            "user": self.user.username,
+            "comment": self.comment,
+            "kv_pairs": kv_pairs,
+            "tags": tags,
+        }
+        return card_dict
+
+    def as_yml(self):
+        """Writes the key - value pairs of the cards as CSV"""
+        return yaml.dump(self.as_dict())
 
 
 class Ontology(PkModel):

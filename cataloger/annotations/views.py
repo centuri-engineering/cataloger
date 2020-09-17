@@ -16,7 +16,13 @@ from flask import (
 )
 from flask_login import login_required, current_user
 
-from .forms import NewAnnotationForm, SearchAnnotationForm, NewCardForm, EditCardForm
+from .forms import (
+    NewAnnotationForm,
+    SearchAnnotationForm,
+    NewCardForm,
+    EditCardForm,
+)
+
 from .models import Card, Organism, Process, Sample, Marker, Gene, Method
 
 # TODO store this as a secret, duh
@@ -194,9 +200,15 @@ def new_card():
     return render_template("annotations/new_card.html", form=form)
 
 
+@blueprint.route(
+    "/delete/<card_id>",
+    methods=["GET"],
+)
 @login_required
 def delete_card(card_id):
     card = Card.query.filter_by(id=card_id).first()
+    card.delete()
+    return redirect("/users")
 
 
 @blueprint.route(
@@ -273,10 +285,10 @@ def edit_card(card_id):
 @login_required
 def download_card(card_id):
     card = Card.query.filter_by(id=card_id).first()
-    _, tmp_csv = tempfile.mkstemp(suffix=".csv")
-    with open(tmp_csv, "w") as fh:
-        fh.write(card.as_csv())
+    _, tmp_yml = tempfile.mkstemp(suffix=".yml")
+    with open(tmp_yml, "w") as fh:
+        fh.write(card.as_yml())
         fh.seek(0)
     return send_file(
-        tmp_csv, as_attachment=True, attachment_filename="omero_annotation.csv"
+        tmp_yml, as_attachment=True, attachment_filename="omero_annotation.yml"
     )

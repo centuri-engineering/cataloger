@@ -14,15 +14,14 @@ store API key in a secret (e.g. through ansible)
 
 - restrict further choices to organism
 - add card download as rich text / print
+- setup "channels" as gene / marker pairs
 
 ** views
 
-- complete card view with the other elements
-- delete / edit cards
 
 ** templates
 
-- card_item : add delete & clone buttons
+- card_item : add clone button
 
 ** whish list
 

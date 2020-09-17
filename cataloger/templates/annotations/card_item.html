@@ -47,6 +47,18 @@
           </button>
         </a>
       </div>
+      <div class="col">
+        <a href={{ url_for('cards.delete_card', card_id=card.id) }}>
+          <button
+            type="button"
+            class="btn btn-lg btn-block btn-outline-primary"
+            style="width: 5rem;"
+            onclick="return confirm('Are you sure you want to delete this card?')"
+            title="Delete Card">
+          <i class="fas fa-trash"></i>
+          </button>
+        </a>
+      </div>
     </div>
   </div>
 </div>
