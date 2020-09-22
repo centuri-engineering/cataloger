@@ -47,9 +47,9 @@ blueprint = Blueprint(
 
 ontologies = {
     "organisms": ("NCBITAXON",),
-    "samples": ("GO", "MESH", "CLO", "FB-BT"),
-    "processes": ("GO",),
-    "methods": ("FBbi", "EDAM-BIOIMAGING"),
+    "samples": ("GO", "MESH", "CLO", "FB-BT", "NCIT"),
+    "processes": ("GO", "MESH", "NCIT"),
+    "methods": ("FBbi", "EDAM-BIOIMAGING", "BAO"),
     "genes": ("GO",),
     "markers": None,  # ("FBbi", "EDAM-BIOIMAGING"),
 }
@@ -287,6 +287,7 @@ def download_card(card_id):
     card = Card.query.filter_by(id=card_id).first()
     _, tmp_yml = tempfile.mkstemp(suffix=".yml")
     with open(tmp_yml, "w") as fh:
+        fh.write("# omero annotation file")
         fh.write(card.as_yml())
         fh.seek(0)
     return send_file(

@@ -17,7 +17,7 @@ store API key in a secret (e.g. through ansible)
 - setup "channels" as gene / marker pairs
 
 ** views
-
+- download as pdf or docx
 
 ** templates
 
@@ -30,3 +30,4 @@ store API key in a secret (e.g. through ansible)
 - link to omero from card
 - restrict ontologies (process, sample  GO)
 - illustrate (wikipedia query?)
+- re-upload card (from yml)
