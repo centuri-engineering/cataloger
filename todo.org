@@ -17,7 +17,10 @@ store API key in a secret (e.g. through ansible)
 - setup "channels" as gene / marker pairs
 
 ** views
+
+- download with title
 - download as pdf or docx
+- use toml
 
 ** templates
 

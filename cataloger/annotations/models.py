@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """User models."""
 import datetime as dt
-import yaml
+import toml
 
 from sqlalchemy.exc import OperationalError
 
@@ -99,9 +99,30 @@ class Card(PkModel):
         }
         return card_dict
 
-    def as_yml(self):
-        """Writes the key - value pairs of the cards as CSV"""
-        return yaml.dump(self.as_dict())
+    def as_toml(self):
+        """Writes the card contents as toml"""
+        return toml.dumps(self.as_dict())
+
+    def as_markdown(self):
+        """Writes the card contents as markdown"""
+        as_dict = self.as_dict()
+        lines = [
+            f"# {self.title}\n\n",
+            f"Created by {self.user.username}\n",
+            self.comment.replace("#", ""),
+            "## Key-value pairs:",
+            "|-----|------|",
+        ]
+        for k, v in as_dict["kv_pairs"]:
+            lines.append(f"| {k} | {v} |")
+        lines.append("|-----|------|\n")
+        lines.append("## Tags:")
+        lines.append(" ".join([f"**{tag}**" for tag in as_dict["tags"]]))
+
+        return "\n".join(lines)
+
+    def as_pdf(self):
+        pass
 
 
 class Ontology(PkModel):
