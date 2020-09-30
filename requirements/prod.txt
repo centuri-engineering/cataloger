@@ -42,5 +42,8 @@ environs==8.0.0
 # Requests
 requests>=2.23
 
-# PyYaml
-pyyaml>=5.3
+# toml
+toml>=0.10
+
+# pandoc
+pandoc>=1.0
