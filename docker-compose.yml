@@ -31,7 +31,7 @@ services:
         <<: *build_args
     image: "cataloger-production"
     ports:
-      - "0.0.0.0:5000:5000"
+      - "127.0.0.1:5000:5000"
     environment:
       FLASK_ENV: production
       FLASK_DEBUG: 0

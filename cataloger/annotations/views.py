@@ -16,14 +16,25 @@ from flask import (
 )
 from flask_login import login_required, current_user
 
-from .forms import (
+from cataloger.annotations.forms import (
     NewAnnotationForm,
     SearchAnnotationForm,
     NewCardForm,
     EditCardForm,
 )
 
-from .models import Card, Organism, Process, Sample, Marker, Gene, Method
+from cataloger.annotations.models import (
+    Card,
+    Organism,
+    Process,
+    Sample,
+    Marker,
+    Gene,
+    Method,
+)
+
+from cataloger.utils import CataBlueprint
+
 
 # TODO store this as a secret, duh
 API_KEY = "3d441415-6164-487b-8ec3-1be7d9fd7383"
@@ -41,7 +52,7 @@ classes = {
 blueprint = Blueprint(
     "cards",
     __name__,
-    url_prefix="/cards",
+    url_prefix="/cataloger/cards",
     static_folder="../static",
 )
 

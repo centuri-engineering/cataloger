@@ -3,9 +3,12 @@
 from flask import Blueprint, render_template
 from flask_login import login_required, current_user
 
-from ..annotations.models import Card
+from cataloger.annotations.models import Card
+from cataloger.utils import CataBlueprint
 
-blueprint = Blueprint("user", __name__, url_prefix="/users", static_folder="../static")
+blueprint = Blueprint(
+    "user", __name__, url_prefix="/cataloger/users", static_folder="../static"
+)
 
 
 @blueprint.route("/")

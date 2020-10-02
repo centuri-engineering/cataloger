@@ -17,7 +17,10 @@ from cataloger.user.forms import RegisterForm
 from cataloger.user.models import User
 from cataloger.utils import flash_errors
 
-blueprint = Blueprint("public", __name__, static_folder="../static")
+
+blueprint = Blueprint(
+    "public", __name__, url_prefix="/cataloger", static_folder="../static"
+)
 
 
 @login_manager.user_loader
@@ -36,10 +39,11 @@ def home():
         if form.validate_on_submit():
             login_user(form.user)
             flash("You are logged in.", "success")
-            redirect_url = request.args.get("next") or url_for("user.cards")
-            return redirect(redirect_url)
+            return redirect(url_for("users.cards"))
         else:
             flash_errors(form)
+            return redirect(url_for("users.cards"))
+
     return render_template("public/home.html", form=form)
 
 

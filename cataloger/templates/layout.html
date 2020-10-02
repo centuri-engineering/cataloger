@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <script src="https://kit.fontawesome.com/11eb352f8d.js" crossorigin="anonymous"></script>
 
-    <link rel="shortcut icon" href="{{static_url_for('static', filename='build/img/favicon.ico') }}">
+    <link rel="shortcut icon" href="{{static_url_for('public.static', filename='build/img/favicon.ico') }}">
     <title>
       {% block page_title %}
       Cataloger
@@ -29,7 +29,7 @@
     <link
       rel="stylesheet"
       type="text/css"
-      href="{{ static_url_for('static', filename='build/main_css.bundle.css') }}"
+      href="{{ static_url_for('public.static', filename='build/main_css.bundle.css') }}"
     />
 
     {% block css %}{% endblock %}
@@ -63,7 +63,7 @@
     {% include "footer.html" %}
 
     <!-- JavaScript at the bottom for fast page loading -->
-    <script src="{{ static_url_for('static', filename='build/main_js.bundle.js') }}"></script>
+    <script src="{{ static_url_for('public.static', filename='build/main_js.bundle.js') }}"></script>
     {% block js %}{% endblock %}
     <!-- end scripts -->
     {% endblock %}

@@ -16,4 +16,13 @@ db = SQLAlchemy()
 migrate = Migrate()
 cache = Cache()
 debug_toolbar = DebugToolbarExtension()
+
+
+class CataFlaskStaticDigest(FlaskStaticDigest):
+    def static_url_for(self, endpoint, *args, **kwargs):
+        endpoint = "cataloger/" + endpoint
+        return super().static_url_for(endpoint, *args, **kwargs)
+
+
+# flask_static_digest = CataFlaskStaticDigest()
 flask_static_digest = FlaskStaticDigest()
