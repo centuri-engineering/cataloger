@@ -35,14 +35,18 @@ def home():
     form = LoginForm(request.form)
     current_app.logger.info("Hello from the home page!")
     # Handle logging in
+    current_app.logger.info("request root: %s", request.script_root)
+    current_app.logger.info("request path: %s", request.path)
+    current_app.logger.info("request method: %s", request.method)
+
     if request.method == "POST":
         if form.validate_on_submit():
             login_user(form.user)
             flash("You are logged in.", "success")
-            return redirect(url_for("users.cards"))
+            return redirect(url_for("user.cards"))
         else:
             flash_errors(form)
-            return redirect(url_for("users.cards"))
+            return redirect(url_for("user.cards"))
 
     return render_template("public/home.html", form=form)
 

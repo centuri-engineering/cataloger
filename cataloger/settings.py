@@ -23,4 +23,4 @@ CACHE_TYPE = "simple"  # Can be "memcached", "redis", etc.
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 APPLICATION_ROOT = "/cataloger"
 SCRIPT_NAME = "/cataloger"
-SERVER_NAME = "centuri-engineering.univ-amu.fr"
+# SERVER_NAME = "centuri-engineering.univ-amu.fr"
