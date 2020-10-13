@@ -44,6 +44,3 @@ requests>=2.23
 
 # toml
 toml>=0.10
-
-# pandoc
-pandoc>=1.0

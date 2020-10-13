@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 """User models."""
+import os
+import tempfile
+import subprocess
 import datetime as dt
 import toml
 
@@ -113,16 +116,13 @@ class Card(PkModel):
             "## Key-value pairs:",
             "|-----|------|",
         ]
-        for k, v in as_dict["kv_pairs"]:
+        for k, v in as_dict["kv_pairs"].items():
             lines.append(f"| {k} | {v} |")
         lines.append("|-----|------|\n")
         lines.append("## Tags:")
         lines.append(" ".join([f"**{tag}**" for tag in as_dict["tags"]]))
 
         return "\n".join(lines)
-
-    def as_pdf(self):
-        pass
 
 
 class Ontology(PkModel):

@@ -4,10 +4,10 @@ from flask import Blueprint, render_template
 from flask_login import login_required, current_user
 
 from cataloger.annotations.models import Card
-from cataloger.utils import CataBlueprint
+from cataloger.utils import get_url_prefix
 
 blueprint = Blueprint(
-    "user", __name__, url_prefix="/cataloger/users", static_folder="../static"
+    "user", __name__, url_prefix=get_url_prefix("users"), static_folder="../static"
 )
 
 

@@ -33,7 +33,7 @@ from cataloger.annotations.models import (
     Method,
 )
 
-from cataloger.utils import CataBlueprint
+from cataloger.utils import get_url_prefix
 
 
 # TODO store this as a secret, duh
@@ -52,7 +52,7 @@ classes = {
 blueprint = Blueprint(
     "cards",
     __name__,
-    url_prefix="/cataloger/cards",
+    url_prefix=get_url_prefix("cards"),
     static_folder="../static",
 )
 
@@ -207,7 +207,7 @@ def new_card():
         )
         flash(f"New card {card.title} created by user {current_user.id}", "success")
         card.save()
-        return redirect("/users")
+        return redirect(url_for("user.cards"))
     return render_template("annotations/new_card.html", form=form)
 
 
@@ -219,7 +219,7 @@ def new_card():
 def delete_card(card_id):
     card = Card.query.filter_by(id=card_id).first()
     card.delete()
-    return redirect("/users")
+    return redirect(url_for("user.cards"))
 
 
 @blueprint.route(
@@ -265,7 +265,7 @@ def edit_card(card_id):
         )
         card.save()
         flash(f"Edited {card.title} by user {current_user.id}", "success")
-        return redirect("/users")
+        return redirect(url_for("user.cards"))
 
     # executed only with a GET
     form.title.data = card.title
@@ -305,4 +305,19 @@ def download_card(card_id):
         tmp_toml,
         as_attachment=True,
         attachment_filename=f'{card.title.replace(" ", "_")}.toml',
+    )
+
+
+@blueprint.route(
+    "/print/<card_id>",
+    methods=["GET"],
+)
+@login_required
+def print_card(card_id):
+    card = Card.query.filter_by(id=card_id).first()
+    card_pdf = card.as_pdf()
+    return send_file(
+        card_pdf,
+        as_attachment=True,
+        attachment_filename=f'{card.title.replace(" ", "_")}.pdf',
     )

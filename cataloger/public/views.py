@@ -15,11 +15,11 @@ from cataloger.extensions import login_manager
 from cataloger.public.forms import LoginForm
 from cataloger.user.forms import RegisterForm
 from cataloger.user.models import User
-from cataloger.utils import flash_errors
+from cataloger.utils import flash_errors, get_url_prefix
 
 
 blueprint = Blueprint(
-    "public", __name__, url_prefix="/cataloger", static_folder="../static"
+    "public", __name__, url_prefix=get_url_prefix(), static_folder="../static"
 )
 
 
