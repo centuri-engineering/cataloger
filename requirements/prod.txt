@@ -1,46 +1,47 @@
 # Everything needed in production
 
 # Flask
-Flask==1.1.2
-Werkzeug==1.0.1
-click>=7.0
+Flask
+Werkzeug
+click
 
 # Database
-Flask-SQLAlchemy==2.4.4
-SQLAlchemy==1.3.18
-psycopg2-binary==2.8.5
+Flask-SQLAlchemy
+SQLAlchemy
+psycopg2-binary
 
 # Migrations
-Flask-Migrate==2.5.3
+Flask-Migrate
 
 # Forms
-email-validator==1.1.1
-Flask-WTF==0.14.3
-WTForms==2.3.1
+email-validator
+Flask-WTF
+WTForms
 
 # Deployment
-gevent==20.6.2
-gunicorn>=19.9.0
-supervisor==4.2.0
+gevent
+gunicorn
+supervisor
 
 # Flask Static Digest
-Flask-Static-Digest==0.1.3
+Flask-Static-Digest
 
 # Auth
-Flask-Login==0.5.0
-Flask-Bcrypt==0.7.1
+Flask-Login
+Flask-Bcrypt
+flask-ldap3-login
 
 # Caching
-Flask-Caching>=1.7.2
+Flask-Caching
 
 # Debug toolbar
-Flask-DebugToolbar==0.11.0
+Flask-DebugToolbar
 
 # Environment variable parsing
-environs==8.0.0
+environs
 
 # Requests
-requests>=2.23
+requests
 
 # toml
-toml>=0.10
+toml
