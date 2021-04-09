@@ -99,11 +99,14 @@ class Card(PkModel):
             "comment": self.comment,
             "kv_pairs": kv_pairs,
             "tags": tags,
+            "user": self.user.username,
+            "accessed": str(dt.datetime.utcnow()),
+            "created": self.created_at
         }
         return card_dict
 
     def as_toml(self):
-        """Writes the card contents as toml"""
+        """Output the card contents as toml"""
         return toml.dumps(self.as_dict())
 
     def as_markdown(self):

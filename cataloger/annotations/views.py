@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """annotation views."""
+import os
 import requests
 import tempfile
 from datetime import datetime
@@ -36,8 +37,16 @@ from cataloger.annotations.models import (
 from cataloger.utils import get_url_prefix
 
 
-# TODO store this as a secret, duh
-API_KEY = "3d441415-6164-487b-8ec3-1be7d9fd7383"
+# https://bioportal.bioontology.org/help#Getting_an_API_key
+
+BIOPORTAL_API_KEY = os.environ.get(BIOPORTAL_API_KEY)
+if not BIOPORTAL_API_KEY:
+    raise ValueError("""
+To use this service, you need an API key provided
+by bioportal here: https://bioportal.bioontology.org/help#Getting_an_API_key,
+this key should then be stored as the environement variable BIOPORTAL_API_KEY
+""")
+
 
 classes = {
     "organisms": Organism,
@@ -70,7 +79,7 @@ def search_bioportal(search_text, **other_params):
     """Searches the bioontology database for the term search_text"""
 
     params = {
-        "apikey": API_KEY,
+        "apikey": BIOPORTAL_API_KEY,
         "q": search_text,
         "suggest": True,
     }
@@ -140,7 +149,7 @@ def _format_label(term):
     label = term["prefLabel"]
     ontology_id = term["links"]["ontology"]
     try:
-        ontology = requests.get(ontology_id, params={"apikey": API_KEY}).json()[
+        ontology = requests.get(ontology_id, params={"apikey": BIOPORTAL_API_KEY}).json()[
             "acronym"
         ]
     except Exception:
@@ -296,6 +305,7 @@ def edit_card(card_id):
 @login_required
 def download_card(card_id):
     card = Card.query.filter_by(id=card_id).first()
+    card.update(user_id=current_user.id)
     _, tmp_toml = tempfile.mkstemp(suffix=".toml")
     with open(tmp_toml, "w") as fh:
         fh.write("# omero annotation file\n")
@@ -306,6 +316,27 @@ def download_card(card_id):
         as_attachment=True,
         attachment_filename=f'{card.title.replace(" ", "_")}.toml',
     )
+
+@blueprint.route(
+    "/clone/<card_id>",
+    methods=["GET"],
+)
+@login_required
+def clone_card(card_id):
+    card = Card.query.filter_by(id=card_id).first()
+    cloned = Card(
+        title=card.title,
+        user_id=current_user.id,
+        organism_id=card.organism_id,
+        process_id=card.process_id,
+        sample_id=card.sample_id,
+        comment=card.comment,
+        markers=card.markers,
+        genes=genes.markers,
+    )
+    cloned.save()
+    flash(f"Card {card.title} cloned by user {current_user.id}", "success")
+    return redirect(url_for(f"cards.edit", card_id=cloned.id))
 
 
 @blueprint.route(

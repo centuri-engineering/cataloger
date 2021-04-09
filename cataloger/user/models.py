@@ -43,6 +43,10 @@ class User(UserMixin, PkModel):
     last_name = Column(db.String(30), nullable=True)
     active = Column(db.Boolean(), default=False)
     is_admin = Column(db.Boolean(), default=False)
+    group_id = reference_col("groups", nullable=False)
+    group = relationship("Group", backref=__tablename__)
+
+
 
     def __init__(self, username, email, password=None, **kwargs):
         """Create instance."""

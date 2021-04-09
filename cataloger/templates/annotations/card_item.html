@@ -38,6 +38,20 @@
       </div>
       <div class="col">
         <a
+          href={{ url_for('cards.clone_card', card_id=card.id) }}
+          target="blank"
+        >
+        <button
+          type="button"
+          class="btn btn-lg btn-block btn-outline-primary"
+          style="width: 5rem;"
+          title="Clone this card">
+          <i class="fa fa-clone"></i>
+        </button>
+        </a>
+      </div>
+      <div class="col">
+        <a
           onclick="PrintDiv('{{ card.id }}')"
           target="blank">
         <button

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """User forms."""
 from flask_wtf import FlaskForm
-from wtforms import PasswordField, StringField
+from wtforms import PasswordField, StringField, SelectField
 from wtforms.validators import DataRequired, Email, EqualTo, Length
 
-from .models import User
+from .models import User, Group
 
 
 class RegisterForm(FlaskForm):
@@ -23,11 +23,46 @@ class RegisterForm(FlaskForm):
         "Verify password",
         [DataRequired(), EqualTo("password", message="Passwords must match")],
     )
+    select_group = SelectField("Group")
 
     def __init__(self, *args, **kwargs):
         """Create instance."""
         super(RegisterForm, self).__init__(*args, **kwargs)
         self.user = None
+        self.select_group.choices = [(g.id, g.label) for g in Group.query.all()]
+
+
+    def validate(self):
+        """Validate the form."""
+        initial_validation = super(RegisterForm, self).validate()
+        if not initial_validation:
+            return False
+        user = User.query.filter_by(username=self.username.data).first()
+        if user:
+            self.username.errors.append("Username already registered")
+            return False
+        user = User.query.filter_by(email=self.email.data).first()
+        if user:
+            self.email.errors.append("Email already registered")
+            return False
+        return True
+
+
+class NewGroupForm(FlaskForm):
+    """Register form."""
+
+    group = StringField(
+        "Group Name", validators=[DataRequired(), Length(min=3, max=25)]
+    )
+    select_leader = SelectField("Leader")
+
+    def __init__(self, *args, **kwargs):
+        """Create instance."""
+        super(RegisterForm, self).__init__(*args, **kwargs)
+        self.user = None
+        # TODO  add a 'leader' role to have a shorter list
+        self.select_leader.choices = [(u.id, u.username) for u in User.query.all()]
+
 
     def validate(self):
         """Validate the form."""
