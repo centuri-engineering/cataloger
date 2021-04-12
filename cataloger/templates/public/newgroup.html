@@ -1,0 +1,16 @@
+
+{% extends "layout.html" %}
+{% block content %}
+<div class="container-narrow">
+  <h1 class="mt-5">Create a group</h1>
+    <br/>
+    <form id="registerForm" class="form form-register" method="POST" action="" role="form">
+           {{ form.csrf_token }}
+            <div class="form-group">
+                {{form.groupname.label}}
+                {{form.groupname(placeholder="Group name", class_="form-control")}}
+            </div>
+            <p><input class="btn btn-primary" type="submit" value="Register"></p>
+    </form>
+</div>
+{% endblock %}
