@@ -3,10 +3,12 @@
 <div class="container">
   <h3>Here are the available cards</h3>
   <hr>
-  <div class="card-deck">
+
+<div class="row row-cols-1 row-cols-md-3 g-4">
     {% for card in cards %}
+    <div class="col">
       {% include('annotations/card_item.html') %}
+    </div>
     {% endfor %}
-  </div>
 </div>
 {% endblock %}
