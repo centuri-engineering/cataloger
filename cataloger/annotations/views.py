@@ -169,10 +169,18 @@ def _format_label(term):
 
 @blueprint.route("/")
 @login_required
-def cards():
-    """List all cards"""
-    cards = Card.query.all()
-    return render_template("annotations/cards.html", cards=cards)
+def cards(scope="group"):
+    """List cards"""
+    if scope == "user":
+        user_id = current_user.id
+        cards_ = Card.query.filter_by(user_id=user_id)
+    elif scope == "group":
+        cards_ = Card.query.filter(
+        Card.group_id == current_user.group_id
+    )
+    else:
+        cards_ = Card.query.all()
+    return render_template("annotations/cards.html", cards=cards_)
 
 
 @blueprint.route(
@@ -202,6 +210,7 @@ def new_card():
         card = Card(
             title=form.title.data,
             user_id=current_user.id,
+            group_id=current_user.group_id,
             organism_id=form.select_organism.data,
             process_id=form.select_process.data,
             sample_id=form.select_sample.data,
@@ -261,6 +270,7 @@ def edit_card(card_id):
         card.update(
             title=form.title.data,
             user_id=current_user.id,
+            group_id=current_user.group_id,
             organism_id=form.select_organism.data,
             process_id=form.select_process.data,
             sample_id=form.select_sample.data,
@@ -314,6 +324,7 @@ def clone_card(card_id):
     cloned = Card(
         title=_increase_tag(card.title),
         user_id=current_user.id,
+        group_id=current_user.group_id,
         organism_id=card.organism_id,
         process_id=card.process_id,
         sample_id=card.sample_id,

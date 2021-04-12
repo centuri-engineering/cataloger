@@ -86,17 +86,17 @@ def register():
 @blueprint.route("/new-group/", methods=["GET", "POST"])
 def create_group():
     """Register new group."""
-    form = NewGroupForm(request.form)
-    if form.validate_on_submit():
+    grp_form = NewGroupForm(request.form)
+    if grp_form.validate_on_submit():
         Group.create(
-            groupname=form.groupname.data,
+            groupname=grp_form.groupname.data,
             active=True,
         )
         flash("New group created.", "success")
         return redirect(url_for("public.home"))
     else:
-        flash_errors(form)
-    return render_template("public/newgroup.html", form=form)
+        flash_errors(grp_form)
+    return render_template("public/newgroup.html", grp_form=grp_form)
 
 @blueprint.route("/about/")
 def about():

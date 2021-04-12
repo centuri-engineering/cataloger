@@ -29,7 +29,7 @@ class RegisterForm(FlaskForm):
         """Create instance."""
         super(RegisterForm, self).__init__(*args, **kwargs)
         self.user = None
-        self.select_group.choices = [(g.id, g.label) for g in Group.query.all()]
+        self.select_group.choices = [(g.id, g.groupname) for g in Group.query.all()]
 
 
     def validate(self):
@@ -68,6 +68,6 @@ class NewGroupForm(FlaskForm):
             return False
         group = Group.query.filter_by(groupname=self.groupname.data).first()
         if group:
-            self.groupname.errors.append("Username already registered")
+            self.groupname.errors.append("Group name already registered")
             return False
         return True

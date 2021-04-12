@@ -48,6 +48,8 @@ class Card(PkModel):
     title = Column(db.String(128), nullable=False)
     user_id = reference_col("users", nullable=False)
     user = relationship("User", backref=__tablename__)
+    group_id = reference_col("groups", nullable=True)
+    group = relationship("Group", backref=__tablename__)
     organism_id = reference_col("organisms", nullable=False)
     organism = relationship("Organism", backref=__tablename__)
     process_id = reference_col("processes", nullable=True)
