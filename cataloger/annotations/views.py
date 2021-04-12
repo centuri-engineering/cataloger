@@ -41,11 +41,13 @@ from cataloger.utils import get_url_prefix
 
 BIOPORTAL_API_KEY = os.environ.get("BIOPORTAL_API_KEY")
 if not BIOPORTAL_API_KEY:
-    raise ValueError("""
+    raise ValueError(
+        """
 To use this service, you need an API key provided
 by bioportal here: https://bioportal.bioontology.org/help#Getting_an_API_key,
 this key should then be stored as the environement variable BIOPORTAL_API_KEY
-""")
+"""
+    )
 
 
 classes = {
@@ -81,7 +83,7 @@ def search_bioportal(search_text, **other_params):
     params = {
         "apikey": BIOPORTAL_API_KEY,
         "q": search_text,
-        "suggest": True,
+        "suggest": False,
     }
     params.update(other_params)
     response = requests.get(f"http://data.bioontology.org/search", params=params).json()
@@ -114,10 +116,14 @@ def new_annotation(cls, search_term=None):
     if search_term is None:
         search_term = request.args.get("search_term")
 
-    suggestions = search_bioportal(search_term, ontologies=ontologies[cls])
+    suggestions = search_bioportal(search_term)  # , ontologies=ontologies[cls])
 
     if not suggestions:
-        flash("No results found, please reformulate your query :)", "warning")
+        flash(
+            """ No results found, please reformulate your quey, with more general
+(and correctly spelled) terms""",
+            "warning",
+        )
         form = SearchAnnotationForm()
         form.search_term.data = search_term
         return render_template("annotations/search_annotation.html", form=form, cls=cls)
@@ -138,8 +144,8 @@ def new_annotation(cls, search_term=None):
             )
         new.save()
         flash(f"Saved new term {new.label}", "success")
-        return redirect(url_for("cards.new_card"))
-
+        form = NewAnnotationForm()
+        return render_template("annotations/new_annotation.html", form=form, cls=cls)
     return render_template(
         "annotations/new_annotation.html", form=new_annotation_form, cls=cls
     )
@@ -148,14 +154,15 @@ def new_annotation(cls, search_term=None):
 def _format_label(term):
     label = term["prefLabel"]
     ontology_id = term["links"]["ontology"]
-    try:
-        ontology = requests.get(ontology_id, params={"apikey": BIOPORTAL_API_KEY}).json()[
-            "acronym"
-        ]
-    except Exception:
-        ontology = ""
-    definition = term.get("definition")
 
+    # try:
+    #     ontology = requests.get(
+    #         ontology_id, params={"apikey": BIOPORTAL_API_KEY}
+    #     ).json()["acronym"]
+    # except Exception:
+    #     ontology = ""
+    definition = term.get("definition")
+    ontology = ontology_id.split("/")[-1]
     if definition:
         split = definition[0].split()
         if len(split) > 20:
@@ -175,9 +182,7 @@ def cards(scope="group"):
         user_id = current_user.id
         cards_ = Card.query.filter_by(user_id=user_id)
     elif scope == "group":
-        cards_ = Card.query.filter(
-        Card.group_id == current_user.group_id
-    )
+        cards_ = Card.query.filter(Card.group_id == current_user.group_id)
     else:
         cards_ = Card.query.all()
     return render_template("annotations/cards.html", cards=cards_)
@@ -313,6 +318,7 @@ def download_card(card_id):
         attachment_filename=f'{card.title.replace(" ", "_")}.toml',
     )
 
+
 @blueprint.route(
     "/clone/<card_id>",
     methods=["GET"],
@@ -364,6 +370,6 @@ def _increase_tag(title):
     if not tag:
         newtitle = title + "1"
     else:
-        newtitle = title[:-len(tag)] + str(int(tag)+1)
+        newtitle = title[: -len(tag)] + str(int(tag) + 1)
 
     return newtitle
