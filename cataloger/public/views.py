@@ -13,8 +13,8 @@ from flask_login import login_required, login_user, logout_user
 
 from cataloger.extensions import login_manager
 from cataloger.public.forms import LoginForm
-from cataloger.user.forms import RegisterForm
-from cataloger.user.models import User
+from cataloger.user.forms import RegisterForm, NewGroupForm
+from cataloger.user.models import User, Group
 from cataloger.utils import flash_errors, get_url_prefix
 
 
@@ -83,6 +83,20 @@ def register():
         flash_errors(form)
     return render_template("public/register.html", form=form)
 
+@blueprint.route("/new-group/", methods=["GET", "POST"])
+def create_group():
+    """Register new group."""
+    form = NewGroupForm(request.form)
+    if form.validate_on_submit():
+        Group.create(
+            groupname=form.groupname.data,
+            active=True,
+        )
+        flash("New group created.", "success")
+        return redirect(url_for("public.home"))
+    else:
+        flash_errors(form)
+    return render_template("public/newgroup.html", form=form)
 
 @blueprint.route("/about/")
 def about():

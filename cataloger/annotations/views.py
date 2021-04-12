@@ -39,7 +39,7 @@ from cataloger.utils import get_url_prefix
 
 # https://bioportal.bioontology.org/help#Getting_an_API_key
 
-BIOPORTAL_API_KEY = os.environ.get(BIOPORTAL_API_KEY)
+BIOPORTAL_API_KEY = os.environ.get("BIOPORTAL_API_KEY")
 if not BIOPORTAL_API_KEY:
     raise ValueError("""
 To use this service, you need an API key provided
@@ -238,21 +238,23 @@ def delete_card(card_id):
 @login_required
 def edit_card(card_id):
     card = Card.query.filter_by(id=card_id).first()
-    form = EditCardForm(card_id=card_id)
+    form = EditCardForm(
+        card_id=card_id,
+    )
 
     if form.add_marker.data:
         form.select_markers.append_entry()
-        return render_template("annotations/new_card.html", form=form)
+        return render_template("annotations/edit_card.html", form=form)
     if form.remove_marker.data and len(form.select_markers):
         form.select_markers.pop_entry()
-        return render_template("annotations/new_card.html", form=form)
+        return render_template("annotations/edit_card.html", form=form)
 
     if form.add_gene.data:
         form.select_genes.append_entry()
-        return render_template("annotations/new_card.html", form=form)
+        return render_template("annotations/edit_card.html", form=form)
     if form.remove_gene.data and len(form.select_genes):
         form.select_genes.pop_entry()
-        return render_template("annotations/new_card.html", form=form)
+        return render_template("annotations/edit_card.html", form=form)
 
     # if form.validate_on_submit():
     if request.method == "POST":
@@ -277,25 +279,9 @@ def edit_card(card_id):
         return redirect(url_for("user.cards"))
 
     # executed only with a GET
-    form.title.data = card.title
-    form.select_organism.data = card.organism_id
-    form.select_process.data = card.process_id
-    form.select_sample.data = card.sample_id
-    form.comment.data = card.comment
+    form.reload_card()
 
-    while len(form.select_markers):
-        form.select_markers.pop_entry()
-    while len(form.select_genes):
-        form.select_genes.pop_entry()
-
-    for marker in card.markers:
-        mrk = form.select_markers.append_entry()
-        mrk.select_marker.data = marker.id
-    for gene in card.genes:
-        gne = form.select_genes.append_entry()
-        gne.select_gene.data = gene.id
-
-    return render_template("annotations/new_card.html", form=form)
+    return render_template("annotations/edit_card.html", form=form)
 
 
 @blueprint.route(
@@ -324,19 +310,21 @@ def download_card(card_id):
 @login_required
 def clone_card(card_id):
     card = Card.query.filter_by(id=card_id).first()
+
     cloned = Card(
-        title=card.title,
+        title=_increase_tag(card.title),
         user_id=current_user.id,
         organism_id=card.organism_id,
         process_id=card.process_id,
         sample_id=card.sample_id,
+        method_id=card.method_id,
         comment=card.comment,
         markers=card.markers,
-        genes=genes.markers,
+        genes=card.genes,
     )
     cloned.save()
     flash(f"Card {card.title} cloned by user {current_user.id}", "success")
-    return redirect(url_for(f"cards.edit", card_id=cloned.id))
+    return redirect(url_for(f"cards.edit_card", card_id=cloned.id))
 
 
 @blueprint.route(
@@ -352,3 +340,19 @@ def print_card(card_id):
         as_attachment=True,
         attachment_filename=f'{card.title.replace(" ", "_")}.pdf',
     )
+
+
+def _increase_tag(title):
+    i = 1
+    num = title[-i]
+    tag = ""
+    while num.isdigit():
+        tag = num + tag
+        i += 1
+        num = title[-i]
+    if not tag:
+        newtitle = title + "1"
+    else:
+        newtitle = title[:-len(tag)] + str(int(tag)+1)
+
+    return newtitle

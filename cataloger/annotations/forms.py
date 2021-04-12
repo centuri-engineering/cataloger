@@ -75,3 +75,33 @@ class EditCardForm(NewCardForm):
     def __init__(self, card_id, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.card_id = card_id
+
+    def reload_card(self):
+
+        self.card = Card.query.filter_by(id=self.card_id).first()
+        self.title.data = self.card.title
+
+        if self.card.organism:
+            self.select_organism.choices = [
+                (self.card.organism.id, self.card.organism.label),
+                ] + self.select_organism.choices
+        if self.card.sample:
+            self.select_sample.choices = [
+                (self.card.sample.id, self.card.sample.label),
+                ] + self.select_sample.choices
+
+        if self.card.process:
+            self.select_process.choices = [
+                (self.card.process.id, self.card.process.label),
+                ] + self.select_process.choices
+
+        if self.card.method:
+            self.select_method.choices = [
+                (self.card.method.id, self.card.method.label),
+                ] + self.select_method.choices
+
+        for marker in self.card.markers:
+            self.select_markers.append_entry((marker.id, marker.label))
+
+        for gene in self.card.genes:
+            self.select_genes.append_entry((gene.id, gene.label))

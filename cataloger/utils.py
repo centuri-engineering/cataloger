@@ -4,7 +4,7 @@ from flask import flash, Blueprint, request
 
 
 def get_url_prefix(sub=""):
-    return "/cataloger/" + sub.lstrip("/").rstrip("/")
+    return "/" + sub.lstrip("/").rstrip("/")
 
 
 def flash_errors(form, category="warning"):

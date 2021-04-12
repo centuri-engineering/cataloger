@@ -43,7 +43,7 @@ class User(UserMixin, PkModel):
     last_name = Column(db.String(30), nullable=True)
     active = Column(db.Boolean(), default=False)
     is_admin = Column(db.Boolean(), default=False)
-    group_id = reference_col("groups", nullable=False)
+    group_id = reference_col("groups", nullable=True)
     group = relationship("Group", backref=__tablename__)
 
 
@@ -81,17 +81,6 @@ class Group(PkModel):
     __tablename__ = "groups"
     groupname = Column(db.String(30), nullable=False)
     active = Column(db.Boolean(), default=False)
-    leader_id = reference_col("users", nullable=True)
-    leader = relationship("User", backref="groups")
-
-    def __init__(self, groupname, leadername, **kwargs):
+    def __init__(self, groupname, **kwargs):
         """Create instance."""
-
-        leader = User.query.filter_by(username=leadername).first()
-        super().__init__(groupname=groupname, leadername=leadername, **kwargs)
-
-    def check_leader_exists(self, leadername):
-
-        if not User.query.filter_by(username=leadername).first():
-            return False
-        return True
+        super().__init__(groupname=groupname, **kwargs)

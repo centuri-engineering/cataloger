@@ -51,30 +51,23 @@ class RegisterForm(FlaskForm):
 class NewGroupForm(FlaskForm):
     """Register form."""
 
-    group = StringField(
+    groupname = StringField(
         "Group Name", validators=[DataRequired(), Length(min=3, max=25)]
     )
-    select_leader = SelectField("Leader")
 
     def __init__(self, *args, **kwargs):
         """Create instance."""
-        super(RegisterForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.user = None
-        # TODO  add a 'leader' role to have a shorter list
-        self.select_leader.choices = [(u.id, u.username) for u in User.query.all()]
 
 
     def validate(self):
         """Validate the form."""
-        initial_validation = super(RegisterForm, self).validate()
+        initial_validation = super().validate()
         if not initial_validation:
             return False
-        user = User.query.filter_by(username=self.username.data).first()
-        if user:
-            self.username.errors.append("Username already registered")
-            return False
-        user = User.query.filter_by(email=self.email.data).first()
-        if user:
-            self.email.errors.append("Email already registered")
+        group = Group.query.filter_by(groupname=self.groupname.data).first()
+        if group:
+            self.groupname.errors.append("Username already registered")
             return False
         return True
