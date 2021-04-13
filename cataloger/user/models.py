@@ -35,7 +35,7 @@ class User(UserMixin, PkModel):
 
     __tablename__ = "users"
     username = Column(db.String(80), unique=True, nullable=False)
-    email = Column(db.String(80), unique=True, nullable=False)
+    email = Column(db.String(80), unique=True, nullable=True)
     #: The hashed password
     password = Column(db.LargeBinary(128), nullable=True)
     created_at = Column(db.DateTime, nullable=False, default=dt.datetime.utcnow)
@@ -46,11 +46,9 @@ class User(UserMixin, PkModel):
     group_id = reference_col("groups", nullable=True)
     group = relationship("Group", backref=__tablename__)
 
-
-
-    def __init__(self, username, email, password=None, **kwargs):
+    def __init__(self, username, password=None, **kwargs):
         """Create instance."""
-        super().__init__(username=username, email=email, **kwargs)
+        super().__init__(username=username, **kwargs)
         if password:
             self.set_password(password)
         else:
@@ -75,12 +73,12 @@ class User(UserMixin, PkModel):
 
 
 class Group(PkModel):
-    """A group of users
-    """
+    """A group of users"""
 
     __tablename__ = "groups"
     groupname = Column(db.String(30), nullable=False)
     active = Column(db.Boolean(), default=False)
+
     def __init__(self, groupname, **kwargs):
         """Create instance."""
         super().__init__(groupname=groupname, **kwargs)

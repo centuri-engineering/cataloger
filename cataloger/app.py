@@ -3,6 +3,8 @@
 import logging
 import sys
 
+logging.basicConfig(level=logging.DEBUG)
+
 from flask import Flask, render_template
 
 from cataloger import commands, public, user, annotations
@@ -14,6 +16,7 @@ from cataloger.extensions import (
     debug_toolbar,
     flask_static_digest,
     login_manager,
+    ldap_manager,
     migrate,
 )
 
@@ -41,6 +44,7 @@ def register_extensions(app):
     db.init_app(app)
     csrf_protect.init_app(app)
     login_manager.init_app(app)
+    ldap_manager.init_app(app)
     debug_toolbar.init_app(app)
     migrate.init_app(app, db)
     flask_static_digest.init_app(app)

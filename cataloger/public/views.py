@@ -11,7 +11,7 @@ from flask import (
 )
 from flask_login import login_required, login_user, logout_user
 
-from cataloger.extensions import login_manager
+from cataloger.extensions import login_manager, ldap_manager
 from cataloger.public.forms import LoginForm
 from cataloger.user.forms import RegisterForm, NewGroupForm
 from cataloger.user.models import User, Group
@@ -27,6 +27,47 @@ blueprint = Blueprint(
 def load_user(user_id):
     """Load user by ID."""
     return User.get_by_id(int(user_id))
+
+
+@ldap_manager.save_user
+def save_user(dn, username, user_info, memberships):
+
+    name = user_info.get("cn", "").split()
+    first = last = None
+    if len(name) > 1:
+        first = name[0]
+        last = " ".join(name[1:])
+    elif len(name) == 1:
+        last = username
+
+    groupname = None
+    for sec in dn.split(","):
+        if sec.startswith("OU"):
+            groupname = sec.split("=")[1]
+            break
+    else:
+        groupname = "default"
+
+    groups = Group.query.filter_by(groupname=groupname)
+    if groups.first():
+        group = groups.first()
+        current_app.logger.info("Found group %s", groupname)
+    else:
+        group = Group.create(
+            groupname=groupname,
+            active=True,
+        )
+        current_app.logger.info("Created group %s", groupname)
+
+    user = User.create(
+        username=username,
+        first_name=first,
+        last_name=last,
+        active=True,
+        group_id=group.id,
+    )
+
+    return user
 
 
 @blueprint.route("/", methods=["GET", "POST"])
@@ -71,17 +112,13 @@ def register():
     """Register new user."""
     form = RegisterForm(request.form)
     if form.validate_on_submit():
-        User.create(
-            username=form.username.data,
-            email=form.email.data,
-            password=form.password.data,
-            active=True,
-        )
-        flash("Thank you for registering. You can now log in.", "success")
-        return redirect(url_for("public.home"))
+        login_user(form.user)
+        flash("Thank you for registering. You are now logged in.", "success")
+        return redirect(url_for("user.cards"))
     else:
         flash_errors(form)
     return render_template("public/register.html", form=form)
+
 
 @blueprint.route("/new-group/", methods=["GET", "POST"])
 def create_group():
@@ -97,6 +134,7 @@ def create_group():
     else:
         flash_errors(grp_form)
     return render_template("public/newgroup.html", grp_form=grp_form)
+
 
 @blueprint.route("/about/")
 def about():

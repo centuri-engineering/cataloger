@@ -5,6 +5,7 @@ from wtforms import PasswordField, StringField
 from wtforms.validators import DataRequired
 
 from cataloger.user.models import User
+from cataloger.extensions import ldap_manager
 
 
 class LoginForm(FlaskForm):
@@ -15,12 +16,13 @@ class LoginForm(FlaskForm):
 
     def __init__(self, *args, **kwargs):
         """Create instance."""
-        super(LoginForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.user = None
 
     def validate(self):
         """Validate the form."""
-        initial_validation = super(LoginForm, self).validate()
+        initial_validation = super().validate()
+
         if not initial_validation:
             return False
 
@@ -28,7 +30,11 @@ class LoginForm(FlaskForm):
         if not self.user:
             self.username.errors.append("Unknown username")
             return False
+        # Try LDAP authentication
+        if ldap_manager.authenticate(self.username.data, self.password.data):
+            return True
 
+        # Try local authentication
         if not self.user.check_password(self.password.data):
             self.password.errors.append("Invalid password")
             return False
