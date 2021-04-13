@@ -17,8 +17,30 @@
       {{ form.title() }}
     </div>
   </div>
+  <div class="form-row" title="The project for this experiment">
+    <!-- Project -->
+    <div class="col-1">
+      <label class="control-label mb-0">
+        <i class="fa fa-project-diagram"></i> <b>Project</b>
+      </label>
+    </div>
+    <div class="col-4">
+      {{ form.select_project() }}
+    </div>
+    <div class="col-1">
+      <a href={{ url_for('cards.new_project', cls="projects") }}
+         target="_blank" rel="noopener noreferrer">
+        <button
+          type="button"
+          class="btn btn-light"
+          style="width: 4rem;"
+          title="Add a new project to the list">
+          <i class="fa fa-plus"></i></button>
+      </a>
+    </div>
+  </div>
   <div class="form-row" title="The binomial name of your bug">
-    <!-- Organsim -->
+    <!-- Organism -->
     <div class="col-1">
       <label class="control-label mb-0">
         <i class="fa fa-bug"></i> <b>Organism</b>

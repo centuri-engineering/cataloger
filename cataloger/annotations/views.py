@@ -22,6 +22,7 @@ from cataloger.annotations.forms import (
     SearchAnnotationForm,
     NewCardForm,
     EditCardForm,
+    NewProjectForm,
 )
 
 from cataloger.annotations.models import (
@@ -32,6 +33,7 @@ from cataloger.annotations.models import (
     Marker,
     Gene,
     Method,
+    Project,
 )
 
 from cataloger.utils import get_url_prefix
@@ -145,6 +147,7 @@ def new_annotation(cls, search_term=None):
         if cls in ("organisms", "methods"):
             new = classes[cls](label=term["prefLabel"], bioportal_id=term["@id"])
         else:
+            # TODO track organism
             new = classes[cls](
                 label=term["prefLabel"], bioportal_id=term["@id"], organism_id=0
             )
@@ -178,6 +181,26 @@ def _format_label(term):
         return f"{label}: {short} \t ({ontology})"
     else:
         return f"{label} \t ({ontology})"
+
+
+@blueprint.route("/new-project/", methods=["GET", "POST"])
+@login_required
+def new_project():
+    form = NewProjectForm()
+    # if form.validate_on_submit():
+    if request.method == "POST":
+        project = Project(
+            name=form.name.data,
+            comment=form.comment.data,
+            user_id=current_user.id,
+            group_id=current_user.group_id,
+        )
+        flash(
+            f"New project {project.name} created by user {current_user.id}", "success"
+        )
+        project.save()
+        return redirect(url_for(".new_project"))
+    return render_template("annotations/new_project.html", form=form)
 
 
 @blueprint.route("/")
@@ -221,6 +244,7 @@ def new_card():
         card = Card(
             title=form.title.data,
             user_id=current_user.id,
+            project_id=form.select_project.data,
             group_id=current_user.group_id,
             organism_id=form.select_organism.data,
             process_id=form.select_process.data,

@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 692b89d092dc
+Revision ID: e942bba6017b
 Revises: 
-Create Date: 2021-04-13 10:12:41.547812
+Create Date: 2021-04-13 16:47:27.582978
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '692b89d092dc'
+revision = 'e942bba6017b'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -66,6 +66,17 @@ def upgrade():
     sa.Column('user_id', sa.Integer(), nullable=True),
     sa.Column('ontology_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['ontology_id'], ['ontologies.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('projects',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=128), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('group_id', sa.Integer(), nullable=False),
+    sa.Column('comment', sa.String(), nullable=True),
+    sa.ForeignKeyConstraint(['group_id'], ['groups.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -134,6 +145,7 @@ def upgrade():
     sa.Column('title', sa.String(length=128), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('group_id', sa.Integer(), nullable=True),
+    sa.Column('project_id', sa.Integer(), nullable=True),
     sa.Column('organism_id', sa.Integer(), nullable=False),
     sa.Column('process_id', sa.Integer(), nullable=True),
     sa.Column('sample_id', sa.Integer(), nullable=True),
@@ -144,6 +156,7 @@ def upgrade():
     sa.ForeignKeyConstraint(['method_id'], ['methods.id'], ),
     sa.ForeignKeyConstraint(['organism_id'], ['organisms.id'], ),
     sa.ForeignKeyConstraint(['process_id'], ['processes.id'], ),
+    sa.ForeignKeyConstraint(['project_id'], ['projects.id'], ),
     sa.ForeignKeyConstraint(['sample_id'], ['samples.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -173,6 +186,7 @@ def downgrade():
     op.drop_table('markers')
     op.drop_table('genes')
     op.drop_table('roles')
+    op.drop_table('projects')
     op.drop_table('organisms')
     op.drop_table('methods')
     op.drop_table('users')

@@ -1,7 +1,7 @@
 {% block content %}
 <div class="card shadow-sm" id="{{ card.id }}">
   <div class="card-header">
-    <h4 class="my-0 font-weight-normal"> {{ card.id }} </h4>
+    <h4 class="my-0 font-weight-normal"> {{ card.project.name}} &mdash; {{ card.id }} </h4>
   </div>
   <div class="card-body">
     <h1 class="card-title pricing-card-title"> {{ card.title }} </h1>

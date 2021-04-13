@@ -50,6 +50,8 @@ class Card(PkModel):
     user = relationship("User", backref=__tablename__)
     group_id = reference_col("groups", nullable=True)
     group = relationship("Group", backref=__tablename__)
+    project_id = reference_col("projects", nullable=True)
+    project = relationship("Project", backref=__tablename__)
     organism_id = reference_col("organisms", nullable=False)
     organism = relationship("Organism", backref=__tablename__)
     process_id = reference_col("processes", nullable=True)
@@ -70,6 +72,7 @@ class Card(PkModel):
             f"# {self.title}",
             f"# {self.created_at}",
             f"# by {username}",
+            f"# for project {self.project.name}",
             "# ",
             f"# {self.comment}",
             f"organism,{self.organism.label}",
@@ -85,25 +88,29 @@ class Card(PkModel):
         return "\n".join(lines)
 
     def as_dict(self):
-        kv_pairs = {
-            "organism": self.organism.label,
-            "sample": self.sample.label,
-            "process": self.process.label,
-            "method": self.method.label,
-        }
+
+        kv_pairs = {}
+        if self.organism:
+            kv_pairs["organism"] = self.organism.label
+        if self.sample:
+            kv_pairs["sample"] = self.sample.label
+        if self.process:
+            kv_pairs["process"] = self.process.label
+        if self.method:
+            kv_pairs["method"] = self.method.label
+
         kv_pairs.update({f"marker_{i}": m.label for i, m in enumerate(self.markers)})
         kv_pairs.update({f"gene_{i}": g.label for i, g in enumerate(self.genes)})
         tags = [w for w in self.comment.split() if w.startswith("#")]
         card_dict = {
             "title": self.title,
             "created": self.created_at,
+            "project": self.project.name,
             "user": self.user.username,
             "comment": self.comment,
             "kv_pairs": kv_pairs,
             "tags": tags,
-            "user": self.user.username,
             "accessed": str(dt.datetime.utcnow()),
-            "created": self.created_at
         }
         return card_dict
 
@@ -128,6 +135,17 @@ class Card(PkModel):
         lines.append(" ".join([f"**{tag}**" for tag in as_dict["tags"]]))
 
         return "\n".join(lines)
+
+
+class Project(PkModel):
+    __tablename__ = "projects"
+    name = Column(db.String(128), nullable=False)
+    created_at = Column(db.DateTime, nullable=False, default=dt.datetime.utcnow)
+    user_id = reference_col("users", nullable=False)
+    user = relationship("User", backref=__tablename__)
+    group_id = reference_col("groups", nullable=False)
+    group = relationship("Group", backref=__tablename__)
+    comment = Column(db.String, nullable=True)
 
 
 class Ontology(PkModel):
@@ -184,8 +202,8 @@ class Process(Annotation):
 
     __tablename__ = "processes"
     user_id = reference_col("users", nullable=True)
-    ontology_id = reference_col("ontologies", nullable=True)
     user = relationship("User", backref=__tablename__)
+    ontology_id = reference_col("ontologies", nullable=True)
     ontology = relationship("Ontology", backref=__tablename__)
     organism_id = reference_col("organisms", nullable=False)
     organism = relationship("Organism", backref=__tablename__)

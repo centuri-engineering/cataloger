@@ -1,0 +1,39 @@
+
+{% extends "layout.html" %}
+{% block content %}
+<div class="container">
+  <h1>Create a new project</h1>
+</div>
+
+<form action=""
+      class="form m-2 p-3"
+      method="post"
+      name="create_project">
+  {{ form.csrf_token }}
+  <div class="form-row" title="">
+    <!-- Project -->
+    <div class="col-1">
+      <label class="control-label mb-0">
+       <b>Project name</b>
+      </label>
+    </div>
+    <div class="col-4">
+      {{ form.name() }}
+    </div>
+  </div>
+  <div class="form-row" title="Short description of the project">
+    <div class="col-1">
+      <label class="control-label mb-0">
+        <b>Comment</b>
+      </label>
+    </div>
+    <div class="col-4">
+      {{ form.comment() }}
+    </div>
+  </div>
+  <div class="form-row">
+    <h4>{{ form.submit() }}</h4>
+  </div>
+</form>
+
+{% endblock %}

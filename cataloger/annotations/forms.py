@@ -8,7 +8,7 @@ from wtforms import (
     TextAreaField,
 )
 from wtforms.validators import DataRequired, Length
-from .models import Card, Organism, Process, Sample, Marker, Gene, Method
+from .models import Card, Organism, Process, Sample, Marker, Gene, Method, Project
 
 
 class SearchAnnotationForm(FlaskForm):
@@ -19,6 +19,12 @@ class SearchAnnotationForm(FlaskForm):
 class NewAnnotationForm(FlaskForm):
     select_term = SelectField("Select the best match", choices=[])
     submit = SubmitField("ok")
+
+
+class NewProjectForm(FlaskForm):
+    name = StringField("Project name")
+    comment = TextAreaField("Comment")
+    submit = SubmitField("save")
 
 
 class MarkerForm(FlaskForm):
@@ -40,11 +46,12 @@ class GeneForm(FlaskForm):
 class NewCardForm(FlaskForm):
 
     title = StringField("Card title")
-    comment = TextAreaField("Comment")
+    select_project = SelectField("Project")
     select_organism = SelectField("Organism")
     select_process = SelectField("Process")
     select_method = SelectField("Method")
     select_sample = SelectField("Sample")
+
     select_markers = FieldList(FormField(MarkerForm))
     add_marker = SubmitField("+")
     remove_marker = SubmitField("-")
@@ -53,10 +60,17 @@ class NewCardForm(FlaskForm):
     add_gene = SubmitField("+")
     remove_gene = SubmitField("-")
 
+    comment = TextAreaField("Comment")
+
     submit = SubmitField("save")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.select_project.choices = [(None, "-")] + [
+            (p.id, p.name) for p in Project.query.all()
+        ]
+
         self.select_organism.choices = [(None, "-")] + [
             (o.id, o.label) for o in Organism.query.all()
         ]
@@ -80,6 +94,10 @@ class EditCardForm(NewCardForm):
 
         self.card = Card.query.filter_by(id=self.card_id).first()
         self.title.data = self.card.title
+
+        self.select_project.choices = [
+            (self.card.project.id, self.card.project.name)
+        ] + self.select_project.choices
 
         if self.card.organism:
             self.select_organism.choices = [
