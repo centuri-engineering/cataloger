@@ -30,6 +30,7 @@ class LoginForm(FlaskForm):
         if not self.user:
             self.username.errors.append("Unknown username")
             return False
+
         # Try LDAP authentication
         if ldap_manager.authenticate(self.username.data, self.password.data):
             return True

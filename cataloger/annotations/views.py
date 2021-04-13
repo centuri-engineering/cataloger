@@ -136,6 +136,12 @@ def new_annotation(cls, search_term=None):
     if request.method == "POST":
         term_id = new_annotation_form.select_term.data
         term = suggestions[term_id]
+        match = classes[cls].query.filter_by(label=term["prefLabel"]).first()
+        if match:
+            flash(f"The term {term['prefLabel']} is already registered", "warning")
+            form = SearchAnnotationForm()
+            return redirect(url_for(".search_annotation", form=form, cls=cls))
+
         if cls in ("organisms", "methods"):
             new = classes[cls](label=term["prefLabel"], bioportal_id=term["@id"])
         else:
@@ -144,8 +150,8 @@ def new_annotation(cls, search_term=None):
             )
         new.save()
         flash(f"Saved new term {new.label}", "success")
-        form = NewAnnotationForm()
-        return render_template("annotations/new_annotation.html", form=form, cls=cls)
+        form = SearchAnnotationForm()
+        return redirect(url_for(".search_annotation", form=form, cls=cls))
     return render_template(
         "annotations/new_annotation.html", form=new_annotation_form, cls=cls
     )

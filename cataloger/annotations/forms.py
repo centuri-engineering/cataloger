@@ -84,21 +84,24 @@ class EditCardForm(NewCardForm):
         if self.card.organism:
             self.select_organism.choices = [
                 (self.card.organism.id, self.card.organism.label),
-                ] + self.select_organism.choices
+            ] + self.select_organism.choices
         if self.card.sample:
             self.select_sample.choices = [
                 (self.card.sample.id, self.card.sample.label),
-                ] + self.select_sample.choices
+            ] + self.select_sample.choices
 
         if self.card.process:
             self.select_process.choices = [
                 (self.card.process.id, self.card.process.label),
-                ] + self.select_process.choices
+            ] + self.select_process.choices
 
         if self.card.method:
             self.select_method.choices = [
                 (self.card.method.id, self.card.method.label),
-                ] + self.select_method.choices
+            ] + self.select_method.choices
+
+        if self.card.comment:
+            self.comment.data = self.card.comment
 
         for marker in self.card.markers:
             self.select_markers.append_entry((marker.id, marker.label))
