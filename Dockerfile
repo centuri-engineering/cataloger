@@ -3,6 +3,7 @@ ARG INSTALL_PYTHON_VERSION=${INSTALL_PYTHON_VERSION:-3.7}
 
 FROM python:${INSTALL_PYTHON_VERSION}-slim-buster AS base
 
+# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=932168
 RUN sed -i "s#deb http://security.debian.org/debian-security stretch/updates main#deb http://deb.debian.org/debian-security stretch/updates main#g" /etc/apt/sources.list
 
 RUN apt-get update
