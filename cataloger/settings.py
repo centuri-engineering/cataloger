@@ -24,6 +24,9 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 APPLICATION_ROOT = "/"
 SCRIPT_NAME = "/"
 
+AUTH_METHOD = env.str("AUTH_METHOD")  # can be 'LDAP', 'OMERO'
+
+
 LDAP_PORT = env.int("LDAP_PORT", 369)
 LDAP_HOST = env.str("LDAP_HOST", "localhost")
 LDAP_READONLY = env.bool("LDAP_READONLY", True)

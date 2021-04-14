@@ -3,9 +3,10 @@
 from flask_wtf import FlaskForm
 from wtforms import PasswordField, StringField
 from wtforms.validators import DataRequired
+from flask_ldap3_login import AuthenticationResponseStatus
 
 from cataloger.user.models import User
-from cataloger.extensions import ldap_manager
+from cataloger.extensions import ldap_manager, omero_manager
 
 
 class LoginForm(FlaskForm):
@@ -31,8 +32,14 @@ class LoginForm(FlaskForm):
             self.username.errors.append("Unknown username")
             return False
 
+        # Try OMERO authentication
+        response = omero_manager.authenticate(self.username.data, self.password.data)
+        if response.status == AuthenticationResponseStatus.success:
+            return True
+
         # Try LDAP authentication
-        if ldap_manager.authenticate(self.username.data, self.password.data):
+        response = ldap_manager.authenticate(self.username.data, self.password.data)
+        if response.status == AuthenticationResponseStatus.success:
             return True
 
         # Try local authentication

@@ -17,6 +17,7 @@ from cataloger.extensions import (
     flask_static_digest,
     login_manager,
     ldap_manager,
+    omero_manager,
     migrate,
 )
 
@@ -45,7 +46,9 @@ def register_extensions(app):
     csrf_protect.init_app(app)
     login_manager.init_app(app)
     ldap_manager.init_app(app)
+    omero_manager.init_app(app)
     debug_toolbar.init_app(app)
+
     migrate.init_app(app, db)
     flask_static_digest.init_app(app)
 

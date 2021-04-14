@@ -11,10 +11,14 @@ from flask_static_digest import FlaskStaticDigest
 
 from flask_wtf.csrf import CSRFProtect
 
+from cataloger.omero_login import OmeroLoginManager
+
+
 bcrypt = Bcrypt()
 csrf_protect = CSRFProtect()
 login_manager = LoginManager()
 ldap_manager = LDAP3LoginManager()
+omero_manager = OmeroLoginManager()
 db = SQLAlchemy()
 migrate = Migrate()
 cache = Cache()

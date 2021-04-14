@@ -11,7 +11,7 @@ from flask import (
 )
 from flask_login import login_required, login_user, logout_user
 
-from cataloger.extensions import login_manager, ldap_manager
+from cataloger.extensions import login_manager, ldap_manager, omero_manager
 from cataloger.public.forms import LoginForm
 from cataloger.user.forms import RegisterForm, NewGroupForm
 from cataloger.user.models import User, Group
@@ -29,10 +29,61 @@ def load_user(user_id):
     return User.get_by_id(int(user_id))
 
 
+@omero_manager.save_user
+def save_user_omero(user_info):
+
+    username = user_info["username"]
+
+    existing = User.query.filter_by(username=username).first()
+    if existing:
+        log.warning("User %s is already registered", user)
+        return existing
+
+    name = user_info.get("fullname", "").split()
+    first = last = None
+    if len(name) > 1:
+        first = name[0]
+        last = " ".join(name[1:])
+    elif len(name) == 1:
+        last = username
+
+    groupname = user_info.get("groupname", "default")
+    groups = Group.query.filter_by(groupname=groupname)
+    if groups.first():
+        group = groups.first()
+        current_app.logger.info("Found group %s", groupname)
+    else:
+        group = Group.create(
+            groupname=groupname,
+            active=True,
+        )
+        current_app.logger.info("Created group %s", groupname)
+
+    user = User.create(
+        username=username,
+        first_name=first,
+        last_name=last,
+        active=True,
+        group_id=group.id,
+    )
+
+    return user
+
+
 @ldap_manager.save_user
-def save_user(dn, username, user_info, memberships):
+def save_user_ldap(dn, username, user_info, memberships):
+    """Saves a user that managed to log in with LDAP
+
+    Group determination method is based on the first 'OU=' section
+    in the user DN, might need tweaking
+    """
+    existing = User.query.filter_by(username=username).first()
+    if existing:
+        log.warning("User %s is already registered", user)
+        return existing
 
     name = user_info.get("cn", "").split()
+
     first = last = None
     if len(name) > 1:
         first = name[0]
@@ -83,7 +134,7 @@ def home():
     if request.method == "POST":
         if form.validate_on_submit():
             login_user(form.user)
-            flash("You are logged in.", "success")
+            flash("You are now logged in.", "success")
             return redirect(url_for("user.cards"))
         else:
             flash_errors(form)
