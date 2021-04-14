@@ -101,7 +101,7 @@ class Card(PkModel):
 
         kv_pairs.update({f"marker_{i}": m.label for i, m in enumerate(self.markers)})
         kv_pairs.update({f"gene_{i}": g.label for i, g in enumerate(self.genes)})
-        tags = [w for w in self.comment.split() if w.startswith("#")]
+        tags = [w.lstrip('#') for w in self.comment.split() if w.startswith("#")]
         card_dict = {
             "title": self.title,
             "created": self.created_at,
@@ -135,6 +135,15 @@ class Card(PkModel):
         lines.append(" ".join([f"**{tag}**" for tag in as_dict["tags"]]))
 
         return "\n".join(lines)
+
+    @property
+    def html_comment(self):
+
+       words = self.comment.split()
+       html = " ".join([
+           f"<b>{w}</b>" if w.startswith("#")  else w for w in words
+       ])
+       return html
 
 
 class Project(PkModel):

@@ -51,7 +51,7 @@ class RegisterForm(LDAPLoginForm):
 
 
 class NewGroupForm(FlaskForm):
-    """Register form."""
+    """Create a group"""
 
     groupname = StringField(
         "Group Name", validators=[DataRequired(), Length(min=3, max=25)]

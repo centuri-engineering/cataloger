@@ -95,9 +95,10 @@ class EditCardForm(NewCardForm):
         self.card = Card.query.filter_by(id=self.card_id).first()
         self.title.data = self.card.title
 
-        self.select_project.choices = [
-            (self.card.project.id, self.card.project.name)
-        ] + self.select_project.choices
+        if self.card.project:
+            self.select_project.choices = [
+                (self.card.project.id, self.card.project.name)
+            ] + self.select_project.choices
 
         if self.card.organism:
             self.select_organism.choices = [
