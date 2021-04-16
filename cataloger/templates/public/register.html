@@ -14,6 +14,18 @@
                 {{form.password.label}}
                 {{form.password(placeholder="Password", class_="form-control")}}
             </div>
+            {% if form.confirm %}
+            <div class="form-group">
+                {{form.confirm.label}}
+                {{form.confirm(class_="form-control")}}
+            </div>
+            {% endif %}
+            {% if form.select_group %}
+            <div class="form-group">
+                {{form.select_group.label}}
+                {{form.select_group(class_="form-control")}}
+            </div>
+            {% endif %}
             <p><input class="btn btn-primary" type="submit" value="Register"></p>
     </form>
     <p><em>Already registered?</em> Click <a href="/">here</a> to login.</p>

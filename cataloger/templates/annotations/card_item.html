@@ -18,12 +18,8 @@
       <li class="list-group-item"><i class="fa fa-comment"></i> {{ card.html_comment | safe }}
       </li>
       {% endif %}
-      {% for marker in card.markers %}
-      <li class="list-group-item"><i class="fas fa-map-marker"></i> {{ marker.label }}
-      </li>
-      {% endfor %}
-      {% for gene in card.genes %}
-      <li class="list-group-item"><i class="fas fa-dna"></i> {{ gene.label }}
+      {% for gene_mod in card.gene_mods %}
+      <li class="list-group-item"><i class="fas fa-dna"></i><i class="fas fa-map-marker"></i> {{ gene_mod.label }}
       </li>
       {% endfor %}
     </ul>

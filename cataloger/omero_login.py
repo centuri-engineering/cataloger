@@ -4,15 +4,15 @@ This is heaviliy inspired by https://flask-ldap3-login.readthedocs.io/
 """
 import logging
 
+
 import omero
+from flask_ldap3_login import AuthenticationResponseStatus
+
 from omero.gateway import BlitzGateway
 from enum import Enum
 
 
 log = logging.getLogger(__name__)
-
-
-AuthenticationResponseStatus = Enum("AuthenticationResponseStatus", "fail success")
 
 
 class AuthenticationResponse:
@@ -67,6 +67,11 @@ class OmeroLoginManager:
         self.config.update(config)
         self.config.setdefault("OMERO_PORT", 4064)
         self.config.setdefault("OMERO_HOST", "localhost")
+        log.info(
+            "Setting omero host to %s:%d",
+            self.config["OMERO_HOST"],
+            self.config["OMERO_PORT"],
+        )
 
     def authenticate(self, username, password):
 
@@ -76,13 +81,16 @@ class OmeroLoginManager:
         session = client.createSession(username, password)
         with BlitzGateway(client_obj=client) as conn:
             if conn.isConnected():
+                log.info("succesfully connected to OMERO")
                 response = AuthenticationResponse(
-                    status=AuthenticationResponse.success, info=self.get_user_info(conn)
+                    status=AuthenticationResponseStatus.success,
+                    user_info=self.get_user_info(conn),
                 )
             else:
                 response = AuthenticationResponse(
-                    status=AuthenticationResponse.fail, info={}
+                    status=AuthenticationResponseStatus.fail, user_info={}
                 )
+        return response
 
     def get_user_info(self, conn):
         user = conn.getUser()
@@ -92,6 +100,7 @@ class OmeroLoginManager:
             "groupname": conn.getGroupFromContext().getName(),
             "groups": [g.getName() for g in conn.getGroupsMemberOf()],
         }
+        log.info("Found user info: %s", info)
         return info
 
     def save_user(self, callback):

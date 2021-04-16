@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """Public section, including homepage and signup."""
+import logging
+
 from flask import (
     Blueprint,
     current_app,
@@ -22,6 +24,8 @@ blueprint = Blueprint(
     "public", __name__, url_prefix=get_url_prefix(), static_folder="../static"
 )
 
+log = logging.getLogger(__name__)
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -36,7 +40,7 @@ def save_user_omero(user_info):
 
     existing = User.query.filter_by(username=username).first()
     if existing:
-        log.warning("User %s is already registered", user)
+        log.warning("User %s is already registered", username)
         return existing
 
     name = user_info.get("fullname", "").split()
@@ -79,7 +83,7 @@ def save_user_ldap(dn, username, user_info, memberships):
     """
     existing = User.query.filter_by(username=username).first()
     if existing:
-        log.warning("User %s is already registered", user)
+        log.warning("User %s is already registered", username)
         return existing
 
     name = user_info.get("cn", "").split()
@@ -130,11 +134,9 @@ def home():
     current_app.logger.info("request root: %s", request.script_root)
     current_app.logger.info("request path: %s", request.path)
     current_app.logger.info("request method: %s", request.method)
-
     if request.method == "POST":
         if form.validate_on_submit():
             login_user(form.user)
-            flash("You are now logged in.", "success")
             return redirect(url_for("user.cards"))
         else:
             flash_errors(form)
@@ -172,6 +174,7 @@ def register():
 
 
 @blueprint.route("/new-group/", methods=["GET", "POST"])
+@login_required
 def create_group():
     """Register new group."""
     grp_form = NewGroupForm(request.form)

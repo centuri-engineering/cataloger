@@ -22,17 +22,10 @@ from ..user.models import User
 """Many to many tables
 """
 
-marker_card = db.Table(
-    "marker_card",
+gene_mod_card = db.Table(
+    "gene_mode_card",
     db.Model.metadata,
-    Column("marker_id", db.Integer, db.ForeignKey("markers.id")),
-    Column("card_id", db.Integer, db.ForeignKey("cards.id")),
-)
-
-gene_card = db.Table(
-    "gene_card",
-    db.Model.metadata,
-    Column("gene_id", db.Integer, db.ForeignKey("genes.id")),
+    Column("gene_mod_id", db.Integer, db.ForeignKey("gene_mods.id")),
     Column("card_id", db.Integer, db.ForeignKey("cards.id")),
 )
 
@@ -61,8 +54,7 @@ class Card(PkModel):
     method_id = reference_col("methods", nullable=True)
     method = relationship("Method", backref=__tablename__)
     created_at = Column(db.DateTime, nullable=True, default=dt.datetime.utcnow)
-    markers = relationship("Marker", secondary=marker_card)
-    genes = relationship("Gene", secondary=gene_card)
+    gene_mods = relationship("GeneMod", secondary=gene_mod_card)
     comment = Column(db.String, nullable=True)
 
     def as_csv(self):
@@ -80,11 +72,7 @@ class Card(PkModel):
             f"method,{self.method.label}",
             f"process,{self.process.label}",
         ]
-        lines += [f"marker_{i},{m.label}" for i, m in enumerate(self.markers)]
-        try:
-            lines += [f"gene_{i},{g.label}" for i, g in enumerate(self.genes)]
-        except OperationalError:  # TODO why?
-            pass
+        lines += [f"gene_mod_{i},{gm.label}" for i, gm in enumerate(self.gene_mods)]
         return "\n".join(lines)
 
     def as_dict(self):
@@ -99,9 +87,10 @@ class Card(PkModel):
         if self.method:
             kv_pairs["method"] = self.method.label
 
-        kv_pairs.update({f"marker_{i}": m.label for i, m in enumerate(self.markers)})
-        kv_pairs.update({f"gene_{i}": g.label for i, g in enumerate(self.genes)})
-        tags = [w.lstrip('#') for w in self.comment.split() if w.startswith("#")]
+        kv_pairs.update(
+            {f"gene_mod_{i}": gm.label for i, gm in enumerate(self.gene_mods)}
+        )
+        tags = [w.lstrip("#") for w in self.comment.split() if w.startswith("#")]
         card_dict = {
             "title": self.title,
             "created": self.created_at,
@@ -139,11 +128,9 @@ class Card(PkModel):
     @property
     def html_comment(self):
 
-       words = self.comment.split()
-       html = " ".join([
-           f"<b>{w}</b>" if w.startswith("#")  else w for w in words
-       ])
-       return html
+        words = self.comment.split()
+        html = " ".join([f"<b>{w}</b>" if w.startswith("#") else w for w in words])
+        return html
 
 
 class Project(PkModel):
@@ -212,9 +199,11 @@ class Process(Annotation):
     __tablename__ = "processes"
     user_id = reference_col("users", nullable=True)
     user = relationship("User", backref=__tablename__)
+    group_id = reference_col("groups", nullable=True)
+    group = relationship("Group", backref=__tablename__)
     ontology_id = reference_col("ontologies", nullable=True)
     ontology = relationship("Ontology", backref=__tablename__)
-    organism_id = reference_col("organisms", nullable=False)
+    organism_id = reference_col("organisms", nullable=True)
     organism = relationship("Organism", backref=__tablename__)
 
 
@@ -231,10 +220,12 @@ class Sample(Annotation):
 
     __tablename__ = "samples"
     user_id = reference_col("users", nullable=True)
-    ontology_id = reference_col("ontologies", nullable=True)
     user = relationship("User", backref=__tablename__)
+    group_id = reference_col("groups", nullable=True)
+    group = relationship("Group", backref=__tablename__)
+    ontology_id = reference_col("ontologies", nullable=True)
     ontology = relationship("Ontology", backref=__tablename__)
-    organism_id = reference_col("organisms", nullable=False)
+    organism_id = reference_col("organisms", nullable=True)
     organism = relationship("Organism", backref=__tablename__)
 
 
@@ -250,8 +241,10 @@ class Method(Annotation):
 
     __tablename__ = "methods"
     user_id = reference_col("users", nullable=True)
-    ontology_id = reference_col("ontologies", nullable=True)
     user = relationship("User", backref=__tablename__)
+    group_id = reference_col("groups", nullable=True)
+    group = relationship("Group", backref=__tablename__)
+    ontology_id = reference_col("ontologies", nullable=True)
     ontology = relationship("Ontology", backref=__tablename__)
 
 
@@ -260,10 +253,12 @@ class Marker(Annotation):
 
     __tablename__ = "markers"
     user_id = reference_col("users", nullable=True)
-    ontology_id = reference_col("ontologies", nullable=True)
     user = relationship("User", backref=__tablename__)
+    group_id = reference_col("groups", nullable=True)
+    group = relationship("Group", backref=__tablename__)
+    ontology_id = reference_col("ontologies", nullable=True)
     ontology = relationship("Ontology", backref=__tablename__)
-    organism_id = reference_col("organisms", nullable=False)
+    organism_id = reference_col("organisms", nullable=True)
     organism = relationship("Organism", backref=__tablename__)
 
 
@@ -279,8 +274,62 @@ class Gene(Annotation):
 
     __tablename__ = "genes"
     user_id = reference_col("users", nullable=True)
-    ontology_id = reference_col("ontologies", nullable=True)
     user = relationship("User", backref=__tablename__)
+    ontology_id = reference_col("ontologies", nullable=True)
+    group_id = reference_col("groups", nullable=True)
+    group = relationship("Group", backref=__tablename__)
     ontology = relationship("Ontology", backref=__tablename__)
-    organism_id = reference_col("organisms", nullable=False)
+    organism_id = reference_col("organisms", nullable=True)
     organism = relationship("Organism", backref=__tablename__)
+
+
+class GeneMod(Annotation):
+    """A marker / gene pair
+
+    Examples
+    --------
+    - alpha-tubulin GFP
+    - Myosin II RNAi
+    - CDC52 delta
+    """
+
+    __tablename__ = "gene_mods"
+    user_id = reference_col("users", nullable=True)
+    user = relationship("User", backref=__tablename__)
+    group_id = reference_col("groups", nullable=True)
+    group = relationship("Group", backref=__tablename__)
+    marker_id = reference_col("markers", nullable=False)
+    marker = relationship("Marker", backref=__tablename__)
+    gene_id = reference_col("genes", nullable=False)
+    gene = relationship("Gene", backref=__tablename__)
+
+
+def get_gene_mod(gene_id, marker_id):
+    """Retrieves a GeneMod model if the gene / marker pair already exists,
+    or creates a new one
+    """
+
+    gene_mod = GeneMod.query.filter_by(gene_id=gene_id, marker_id=marker_id).first()
+    if gene_mod:
+        return gene_mod
+
+    gene = Gene.get_by_id(gene_id)
+    if not gene:
+        return None
+
+    marker = Marker.get_by_id(marker_id)
+
+    label = f"{gene.label}-{marker.label if marker else ''}"
+    bioportal_id = (
+        f"{gene.bioportal_id}-{marker.bioportal_id if marker.bioportal_id else ''}"
+    )
+    gene_mod = GeneMod(
+        label=label,
+        bioportal_id=bioportal_id,
+        user_id=gene.user.id,
+        group_id=gene.group.group_id,
+        marker_id=marker_id,
+        gene_id=gene_id,
+    )
+    gene_mod.save()
+    return gene_mod

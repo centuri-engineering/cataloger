@@ -1,207 +1,241 @@
 {% extends "layout.html" %}
-
 {% block content %}
+
+<div class="p-4 mb-3 bg-light rounded-3">
+  <div class="container-fluid py-6">
+    <h3 class="display-4 fw-bold">Card edition form</h3>
+    <p class="col-md-5 fs-4">
+      Use the various menus to define you experiment.
+      If you do not
+      find a suitable entry, hit the <i class="fa fa-plus"></i> icon
+      to search for a new term (opens a new tab or window in your browser).
+    </p>
+    <p class="col-md-5 fs-4">
+      Once you have added a term, <b>save your card</b> by clicking <i class="fa fa-save"></i>, then
+      reload the page with <i class="fa fa-refresh"></i>.
+    </p>
+    <p class="col-md-5 fs-4">
+      You can put <b>#hashtags</b> in the <i class="fa fa-comment"></i>  section.
+    </p>
+  </div>
+</div>
+
 <form action=""
-      class="form m-2 p-3"
+      class="form m-4 p-1"
       method="post"
       name="create_card">
   {{ form.csrf_token }}
 
   <div class="form-row" title="Something descriptive and specific">
-    <div class="col-1">
+    <div class="col-2">
       <label class="control-label mb-0">
         <b> Title </b>
       </label>
     </div>
-    <div class="col-4">
+    <div class="col-5">
       {{ form.title() }}
-    </div>
-  </div>
-  <div class="form-row" title="The project for this experiment">
-    <!-- Project -->
-    <div class="col-1">
-      <label class="control-label mb-0">
-        <i class="fa fa-project-diagram"></i> <b>Project</b>
-      </label>
-    </div>
-    <div class="col-4">
-      {{ form.select_project() }}
-    </div>
-    <div class="col-1">
-      <a href={{ url_for('cards.new_project', cls="projects") }}
-         target="_blank" rel="noopener noreferrer">
-        <button
-          type="button"
-          class="btn btn-light"
-          style="width: 4rem;"
-          title="Add a new project to the list">
-          <i class="fa fa-plus"></i></button>
-      </a>
-    </div>
-  </div>
-  <div class="form-row" title="The binomial name of your bug">
-    <!-- Organism -->
-    <div class="col-1">
-      <label class="control-label mb-0">
-        <i class="fa fa-bug"></i> <b>Organism</b>
-      </label>
-    </div>
-    <div class="col-4">
-      {{ form.select_organism() }}
-    </div>
-    <div class="col-1">
-      <a href={{ url_for('cards.search_annotation', cls="organisms") }}
-         target="_blank" rel="noopener noreferrer">
-        <button
-          type="button"
-          class="btn btn-light"
-          style="width: 4rem;"
-          title="Add a new organism to the list">
-          <i class="fa fa-plus"></i></button>
-      </a>
-    </div>
-  </div>
-  <div class="form-row" title="the organ, cell line or epithelium of interest">
-    <!-- Sample -->
-    <div class="col-1">
-      <label class="control-label mb-0">
-        <i class="fa fa-flask"></i> <b>Sample</b>
-      </label>
-    </div>
-    <div class="col-4">
-      {{ form.select_sample() }}
-    </div>
-    <div class="col-1">
-      <a href={{ url_for('cards.search_annotation', cls="samples") }}
-         target="_blank" rel="noopener noreferrer">
-        <button
-          type="button"
-          class="btn btn-light"
-          style="width: 4rem;"
-          title="Add a new sample to the list">
-          <i class="fa fa-plus"></i></button>
-      </a>
-    </div>
-  </div>
-  <div class="form-row" title="The observed phenomenon or mechanism">
-    <!-- Process -->
-    <div class="col-1">
-      <label class="control-label mb-0">
-        <i class="fa fa-cogs"></i> <b>Process</b>
-      </label>
-    </div>
-    <div class="col-4">
-      {{ form.select_process() }}
-    </div>
-    <div class="col-1">
-      <a href={{ url_for('cards.search_annotation', cls="processes") }}
-         target="_blank" rel="noopener noreferrer">
-        <button
-          type="button"
-          class="btn btn-light"
-          style="width: 4rem;"
-          title="Add a new process to the list">
-          <i class="fa fa-plus"></i></button>
-      </a>
-    </div>
-  </div>
-  <div class="form-row" title="The experimental method (e.g SHG, FRAP or wide field)">
-    <!-- Method -->
-    <div class="col-1">
-      <label class="control-label mb-0">
-        <i class="fa fa-tools"></i> <b>Method</b>
-      </label>
-    </div>
-    <div class="col-4">
-      {{ form.select_method() }}
-    </div>
-    <div class="col-1">
-      <a href={{ url_for('cards.search_annotation', cls="methods") }}
-         target="_blank" rel="noopener noreferrer">
-        <button
-          type="button"
-          class="btn btn-light"
-          style="width: 4rem;"
-          title="Add a new method to the list">
-          <i class="fa fa-plus"></i></button>
-      </a>
-    </div>
-  </div>
-  <div class="form-row">
-    <!-- Markers -->
-    <div class="col-1">
-      <label
-        class="control-label mb-0"
-        title="Contrast enhancement marker">
-        <i class="fas fa-map-marker"></i> <b>Markers</b>
-      </label>
-    </div>
-    <div class="col-4">
-      {% for marker_form in form.select_markers.entries %}
-        {{ marker_form.select_marker() }}
-      {% endfor %}
-    <a title="add a marker entry">
-      {{ form.add_marker() }}
-    </a>
-    <a title="remove last marker entry">
-      {{ form.remove_marker() }}
-    </a>
-    </div>
-    <div class="col-1">
-      <a href={{ url_for('cards.search_annotation', cls="markers") }}
-         target="_blank" rel="noopener noreferrer">
-        <button
-          type="button"
-          class="btn btn-light"
-          style="width: 4rem;"
-          title="Add a new marker to the list">
-          <i class="fa fa-plus"></i></button>
-      </a>
-    </div>
-  </div>
-  <div class="form-row">
-    <!-- Genes -->
-    <div class="col-1">
-      <label class="control-label mb-0">
-        <i class="fas fa-dna"></i> <b>Genes</b>
-      </label>
-    </div>
-    <div class="col-4">
-    {% for gene_form in form.select_genes.entries %}
-      {{ gene_form.select_gene() }}
-    {% endfor %}
-    <a title="add a gene entry">
-      {{ form.add_gene() }}
-    </a>
-    <a title="remove last gene entry">
-      {{ form.remove_gene() }}
-    </a>
-    </div>
-    <div class="col-1">
-      <a href={{ url_for('cards.search_annotation', cls="genes") }}
-         target="_blank" rel="noopener noreferrer">
-        <button
-          type="button"
-          class="btn btn-light"
-          style="width: 4rem;"
-          title="Add a new gene/protein to the list">
-          <i class="fa fa-plus"></i></button>
-      </a>
     </div>
   </div>
   <div class="form-row" title="hashtags will be imported as tags">
     <!-- Comment -->
-    <div class="col-1">
+    <div class="col-2">
       <label class="control-label mb-0">
-        <i class="fa fa-comment"></i> <b>Comment</b>
+        <i class="fa fa-comment"></i> <b>Description</b>
       </label>
     </div>
+  </div>
+  <div class="form-row" title="hashtags will be imported as tags">
     <div class="col-6">
-      {{ form.comment() }}
+      {{ form.comment(cols="80", rows="6") }}
     </div>
   </div>
   <div class="form-row">
-    <h4>{{ form.submit() }}</h4>
+    <hr/>
+  </div>
+</form>
+
+<form action=""
+      class="form m-2 p-3"
+      method="post"
+      name="create_card">
+  {{ form.csrf_token }}
+  <div class="form-row" title="The project for this experiment">
+    <!-- Project -->
+    <div class="col-2">
+      <label class="control-label mb-0">
+        <i class="fa fa-project-diagram"></i> <b>Project</b>
+      </label>
+    </div>
+    <div class="col-1">
+      <a href={{ url_for('cards.new_project', cls="projects") }}>
+          <i class="fa fa-plus"></i>
+      </a>
+    </div>
+    <div class="col-5">
+      {{ form.select_project() }}
+    </div>
+  </div>
+  <div class="form-row" title="The binomial name of your bug">
+    <!-- Organism -->
+    <div class="col-2">
+      <label class="control-label mb-0">
+        <i class="fa fa-bug"></i> <b>Experimental Model</b>
+      </label>
+    </div>
+    <div class="col-3">
+      {{ form.select_organism() }}
+    </div>
+    <div class="col-1">
+      {{ form.add_organism() }}
+    </div>
+    <div class="col-2">
+      {% if form.add_organism.data %}
+        {% if not form.search_organism.data %}
+           {{ form.search_organism() }}
+        {% else  %}
+          {{ form.select_new_organism() }}
+        {% endif %}
+      {% endif %}
+    </div>
+    <div class="col-2">
+      {% if form.add_organism.data %}
+        {% if not form.search_organism.data %}
+      <button
+        type="submit"
+        class="btn btn-light"
+        style="width: 8rem;"
+        title="search">
+        <i class="fa fa-search"></i></button>
+      {% else  %}
+      <button
+        type="submit"
+        class="btn btn-light"
+        style="width: 8rem;"
+        title="add term">
+        <i class="fa fa-check"></i></button>
+      {% endif %}
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="form-row" title="the organ, cell line or epithelium of interest">
+    <!-- Sample -->
+    <div class="col-2">
+      <label class="control-label mb-0">
+        <i class="fa fa-flask"></i> <b>Sample</b>
+      </label>
+    </div>
+    <div class="col-5">
+      {{ form.select_sample() }}
+    </div>
+  </div>
+  <div class="form-row" title="The observed phenomenon or mechanism">
+    <!-- Process -->
+    <div class="col-2">
+      <label class="control-label mb-0">
+        <i class="fa fa-cogs"></i> <b>Observed Process</b>
+      </label>
+    </div>
+    <div class="col-5">
+      {{ form.select_process() }}
+    </div>
+  </div>
+  <div class="form-row" title="The experimental method (e.g SHG, FRAP or wide field)">
+    <!-- Method -->
+    <div class="col-2">
+      <label class="control-label mb-0">
+        <i class="fa fa-tools"></i> <b>Method</b>
+      </label>
+    </div>
+    <div class="col-5">
+      {{ form.select_method() }}
+    </div>
+  </div>
+</form>
+<form action=""
+      class="form m-2 p-3"
+      method="post"
+      name="create_card">
+  {{ form.csrf_token }}
+  <div class="form-row">
+    <!-- Gene mod -->
+    <div class="col-2">
+      <label class="control-label mb-0"
+             title="Gene and their modification">
+        <i class="fas fa-dna"></i><i class="fas fa-map-marker"></i> <b>Gene-Marker pairs</b>
+      </label>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="col-2">
+    </div>
+    <div class="col-1">
+      <label class="control-label mb-0"
+             title="Gene or protein">
+        <i class="fas fa-dna"></i> <b>Genes</b>
+      </label>
+    </div>
+    </div>
+    <div class="col-1">
+      <label
+        class="control-label mb-0"
+        title="Gene modifiers">
+        <i class="fas fa-map-marker"></i> <b>Markers</b>
+      </label>
+    </div>
+  </div>
+  {% for gene_mod_form in form.select_gene_mods.entries %}
+  <div class="form-row">
+    <div class="col-2">
+    </div>
+    <div class="col-2">
+        {{ gene_mod_form.select_gene() }}
+    </div>
+    <div class="col-2">
+        {{ gene_mod_form.select_marker() }}
+    </div>
+  </div>
+  {% endfor %}
+
+  <div class="form-row">
+    <div class="col-2">
+      <a title="add a gene modification entry">
+        {{ form.add_gene_mod() }}
+      </a>
+      <a title="remove last entry">
+        {{ form.remove_gene_mod() }}
+      </a>
+    </div>
+  </div>
+  <div class="form-row">
+    <hr/>
+  </div>
+  <div class="form-row">
+      <a>
+        <button
+          type="submit"
+          class="btn btn-light"
+          style="width: 8rem;"
+          title="Save card">
+          <i class="fa fa-save"></i></button>
+      </a>
+      <a target="blank">
+        <button
+          type="button"
+          onClick="window.location.reload(true)"
+          class="btn btn-light"
+          style="width: 4rem;"
+          title="Reload menus">
+          <i class="fa fa-refresh"></i></button>
+      </a>
+      <a href={{ url_for("user.cards") }}>
+        <button
+          type="button"
+          class="btn btn-light"
+          style="width: 8rem;"
+          title="Go home">
+          <i class="fa fa-home"></i></button>
+      </a>
   </div>
 </form>
 {% endblock %}

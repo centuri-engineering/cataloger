@@ -3,6 +3,7 @@
 import os
 import requests
 import tempfile
+import logging
 from datetime import datetime
 
 from flask import (
@@ -34,10 +35,12 @@ from cataloger.annotations.models import (
     Gene,
     Method,
     Project,
+    GeneMod,
 )
 
 from cataloger.utils import get_url_prefix
 
+log = logging.getLogger(__name__)
 
 # https://bioportal.bioontology.org/help#Getting_an_API_key
 
@@ -93,89 +96,56 @@ def search_bioportal(search_text, **other_params):
     return {term["@id"]: term for term in response["collection"]}
 
 
-@blueprint.route("/search/", methods=["GET", "POST"], defaults={"cls": "organisms"})
-@blueprint.route("/search/<cls>", methods=["GET", "POST"])
-@login_required
-def search_annotation(cls):
-    """Search an annotation in Bioportal."""
-    form = SearchAnnotationForm()
-    if request.method == "POST":
-        search_term = form.search_term.data
-        return redirect(url_for(".new_annotation", cls=cls, search_term=search_term))
-
-    return render_template("annotations/search_annotation.html", form=form, cls=cls)
-
-
-@blueprint.route(
-    "/new-term/",
-    methods=["GET", "POST"],
-    defaults={"cls": "organisms", "search_term": "pombe"},
-)
-@blueprint.route("/new-term/<cls>", methods=["GET", "POST"])
-@login_required
-def new_annotation(cls, search_term=None):
-    """New annotation."""
+def annotation_choices(cls, search_term=None):
     if search_term is None:
         search_term = request.args.get("search_term")
-
     suggestions = search_bioportal(search_term)  # , ontologies=ontologies[cls])
 
     if not suggestions:
         flash(
-            """ No results found, please reformulate your quey, with more general
-(and correctly spelled) terms""",
+            """Sorry, no results found. Please reformulate your query,
+ maybe with more general terms, and check for typos""",
             "warning",
         )
-        form = SearchAnnotationForm()
-        form.search_term.data = search_term
-        return render_template("annotations/search_annotation.html", form=form, cls=cls)
 
-    new_annotation_form = NewAnnotationForm()
-    new_annotation_form.select_term.choices = [
-        (term_id, _format_label(term)) for term_id, term in suggestions.items()
-    ]
+    uniq = {_format_label(term): term_id for term_id, term in suggestions.items()}
+    choices = [(v, k) for k, v in uniq.items()]
+    return suggestions, choices
 
-    if request.method == "POST":
-        term_id = new_annotation_form.select_term.data
-        term = suggestions[term_id]
-        match = classes[cls].query.filter_by(label=term["prefLabel"]).first()
-        if match:
-            flash(f"The term {term['prefLabel']} is already registered", "warning")
-            form = SearchAnnotationForm()
-            return redirect(url_for(".search_annotation", form=form, cls=cls))
 
-        if cls in ("organisms", "methods"):
-            new = classes[cls](label=term["prefLabel"], bioportal_id=term["@id"])
-        else:
-            # TODO track organism
-            new = classes[cls](
-                label=term["prefLabel"], bioportal_id=term["@id"], organism_id=0
-            )
-        new.save()
-        flash(f"Saved new term {new.label}", "success")
-        form = SearchAnnotationForm()
-        return redirect(url_for(".search_annotation", form=form, cls=cls))
-    return render_template(
-        "annotations/new_annotation.html", form=new_annotation_form, cls=cls
-    )
+def new_annotation(cls, term, card_id=None):
+    """New annotation."""
+
+    match = classes[cls].query.filter_by(label=term["prefLabel"]).first()
+    if match:
+        flash(f"The term {term['prefLabel']} is already registered", "warning")
+        return match
+
+    if cls in ("organisms", "methods"):
+        new = classes[cls](label=term["prefLabel"], bioportal_id=term["@id"])
+        return new
+    else:
+        card = Card.get_by_id(card_id)
+        organism_id = card.organism_id if card else 0
+        new = classes[cls](
+            label=term["prefLabel"],
+            bioportal_id=term["@id"],
+            organism_id=organism_id,
+        )
+
+    new.save()
+    return new
 
 
 def _format_label(term):
     label = term["prefLabel"]
     ontology_id = term["links"]["ontology"]
-
-    # try:
-    #     ontology = requests.get(
-    #         ontology_id, params={"apikey": BIOPORTAL_API_KEY}
-    #     ).json()["acronym"]
-    # except Exception:
-    #     ontology = ""
     definition = term.get("definition")
     ontology = ontology_id.split("/")[-1]
     if definition:
         split = definition[0].split()
-        if len(split) > 20:
-            short = " ".join(split[:20]) + "..."
+        if len(split) > 8:
+            short = " ".join(split[:8]).split(".")[0] + "..."
         else:
             short = definition
         return f"{label}: {short} \t ({ontology})"
@@ -224,43 +194,19 @@ def cards(scope="group"):
 @login_required
 def new_card():
     """Creates a card"""
+
     form = NewCardForm()
-    if form.add_marker.data:
-        form.select_markers.append_entry()
-        return render_template("annotations/new_card.html", form=form)
-    if form.remove_marker.data and len(form.select_markers):
-        form.select_markers.pop_entry()
-        return render_template("annotations/new_card.html", form=form)
-
-    if form.add_gene.data:
-        form.select_genes.append_entry()
-        return render_template("annotations/new_card.html", form=form)
-    if form.remove_gene.data and len(form.select_genes):
-        form.select_genes.pop_entry()
-        return render_template("annotations/new_card.html", form=form)
-
-    # if form.validate_on_submit():
-    if request.method == "POST":
+    if form.title.data:
         card = Card(
             title=form.title.data,
             user_id=current_user.id,
-            project_id=form.select_project.data,
             group_id=current_user.group_id,
-            organism_id=form.select_organism.data,
-            process_id=form.select_process.data,
-            sample_id=form.select_sample.data,
-            comment=form.comment.data,
-            markers=[
-                Marker.get_by_id(m.select_marker.data)
-                for m in form.select_markers.entries
-            ],
-            genes=[
-                Gene.get_by_id(m.select_gene.data) for m in form.select_genes.entries
-            ],
+            organism_id=0,
         )
-        flash(f"New card {card.title} created by user {current_user.id}", "success")
         card.save()
-        return redirect(url_for("user.cards"))
+        form.card_id = card.id
+        return redirect(url_for("cards.edit_card", card_id=card.id))
+
     return render_template("annotations/new_card.html", form=form)
 
 
@@ -271,7 +217,12 @@ def new_card():
 @login_required
 def delete_card(card_id):
     card = Card.query.filter_by(id=card_id).first()
+    if not card.user_id == current_user.id:
+        flash("You can only delete your own cards")
+        return redirect(url_for("user.cards"))
+
     card.delete()
+
     return redirect(url_for("user.cards"))
 
 
@@ -282,47 +233,31 @@ def delete_card(card_id):
 @login_required
 def edit_card(card_id):
     card = Card.query.filter_by(id=card_id).first()
-    form = EditCardForm(
-        card_id=card_id,
-    )
-
-    if form.add_marker.data:
-        form.select_markers.append_entry()
-        return render_template("annotations/edit_card.html", form=form)
-    if form.remove_marker.data and len(form.select_markers):
-        form.select_markers.pop_entry()
-        return render_template("annotations/edit_card.html", form=form)
-
-    if form.add_gene.data:
-        form.select_genes.append_entry()
-        return render_template("annotations/edit_card.html", form=form)
-    if form.remove_gene.data and len(form.select_genes):
-        form.select_genes.pop_entry()
-        return render_template("annotations/edit_card.html", form=form)
-
-    # if form.validate_on_submit():
-    if request.method == "POST":
-        card.update(
-            title=form.title.data,
-            user_id=current_user.id,
-            group_id=current_user.group_id,
-            project_id=form.select_project.data,
-            organism_id=form.select_organism.data,
-            process_id=form.select_process.data,
-            sample_id=form.select_sample.data,
-            method_id=form.select_method.data,
-            comment=form.comment.data,
-            markers=[
-                Marker.get_by_id(m.select_marker.data)
-                for m in form.select_markers.entries
-            ],
-            genes=[
-                Gene.get_by_id(m.select_gene.data) for m in form.select_genes.entries
-            ],
-        )
-        card.save()
-        flash(f"Edited {card.title} by user {current_user.id}", "success")
+    if not card.user_id == current_user.id:
+        flash("You can only edit your own cards, consider cloning instead")
         return redirect(url_for("user.cards"))
+    form = EditCardForm(card_id=card_id)
+    if form.add_organism.data and form.search_organism.data:
+        search_term = form.search_organism.data
+        suggestions, choices = annotation_choices("organisms", search_term=search_term)
+        form.select_new_organism.choices = choices
+        if form.select_new_organism.data:
+            term = suggestions[form.select_new_organism.data]
+            new = new_annotation("organisms")
+            card.update(organism_id=new.id)
+        return render_template("annotations/edit_card.html", form=form)
+
+    if form.add_gene_mod.data:
+        form.select_gene_mods.append_entry()
+        return render_template("annotations/edit_card.html", form=form)
+
+    if form.remove_gene_mod.data and len(form.select_gene_mods):
+        form.select_gene_mods.pop_entry()
+        return render_template("annotations/edit_card.html", form=form)
+
+    if form.validate_on_submit():
+        flash(f"Edited {card.title} by user {current_user.id}", "success")
+        return redirect(url_for("cards.edit_card", card_id=card.id))
 
     # executed only with a GET
     form.reload_card()

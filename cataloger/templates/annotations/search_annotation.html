@@ -12,11 +12,21 @@
       name="search_annotation">
   <div class="row mt-2 align-self-end">
     {{ form.csrf_token }}
-    <div class="col align-self-end">
-      {{ render_field(form.search_term) }}
+    <div class="col">
+      {{ form.search_term.label }}:
     </div>
-    <div class="col align-self-end">
-      {{ render_field(form.submit) }}
+    <div class="col">
+      {{ form.search_term() }}
+    </div>
+    <div class="col">
+    <a>
+      <button
+        type="submit"
+        class="btn btn-light"
+        style="width: 8rem;"
+        title="Search">
+        <i class="fa fa-search"></i>
+    </a>
     </div>
   </div>
 </form>

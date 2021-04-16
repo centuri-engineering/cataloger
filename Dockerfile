@@ -1,25 +1,20 @@
 # ==================================== BASE ====================================
 ARG INSTALL_PYTHON_VERSION=${INSTALL_PYTHON_VERSION:-3.7}
 
-FROM python:${INSTALL_PYTHON_VERSION}-slim-buster AS base
+FROM condaforge/mambaforge AS base
 
-# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=932168
-RUN sed -i "s#deb http://security.debian.org/debian-security stretch/updates main#deb http://deb.debian.org/debian-security stretch/updates main#g" /etc/apt/sources.list
 
 RUN apt-get update
 
 RUN apt-get install -y \
     gcc \
-    curl \
-    git \
     wget
 
 
+RUN mamba install -c ome omero-py
 ARG INSTALL_NODE_VERSION=${INSTALL_NODE_VERSION:-12}
-RUN curl -sL https://deb.nodesource.com/setup_${INSTALL_NODE_VERSION}.x | bash -
-RUN apt-get install -y \
-    nodejs \
-    && apt-get -y autoclean
+RUN mamba install nodejs=${INSTALL_NODE_VERSION}
+
 
 WORKDIR /app
 COPY requirements requirements
@@ -30,21 +25,11 @@ RUN useradd -m sid
 RUN chown -R sid:sid /app
 USER sid
 
-ENV PATH="/home/sid/miniconda3/bin:${PATH}"
-ARG PATH="/home/sid/miniconda3/bin:${PATH}"
-RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
-    && mkdir /home/sid/.conda \
-    && bash Miniconda3-latest-Linux-x86_64.sh -b \
-    && rm -f Miniconda3-latest-Linux-x86_64.sh \
-
-RUN echo 'export PATH=/home/sid/miniconda3/bin/:$PATH' >> ~/.bashrc
-
 RUN echo "python version: " && which python
 RUN python -c "import sys; print(sys.version)"
 
 ENV PATH="/home/sid/.local/bin:${PATH}"
 RUN npm install
-RUN conda install -c ome omero-py
 
 # ================================= DEVELOPMENT ================================
 FROM base AS development

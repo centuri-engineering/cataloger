@@ -1,3 +1,6 @@
+import logging
+
+
 from flask_wtf import FlaskForm
 from wtforms import (
     StringField,
@@ -7,8 +10,22 @@ from wtforms import (
     FormField,
     TextAreaField,
 )
+from wtforms.widgets import TextArea
 from wtforms.validators import DataRequired, Length
-from .models import Card, Organism, Process, Sample, Marker, Gene, Method, Project
+
+from .models import (
+    Card,
+    Organism,
+    Process,
+    Sample,
+    Marker,
+    Gene,
+    Method,
+    Project,
+    get_gene_mod,
+)
+
+log = logging.getLogger(__name__)
 
 
 class SearchAnnotationForm(FlaskForm):
@@ -43,6 +60,20 @@ class GeneForm(FlaskForm):
         self.select_gene.choices = [(p.id, p.label) for p in Gene.query.all()]
 
 
+class GeneModForm(FlaskForm):
+    select_gene = SelectField("Gene")
+    select_marker = SelectField("Marker")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.select_marker.choices = [(None, "-")] + [
+            (p.id, p.label) for p in Marker.query.all()
+        ]
+        self.select_gene.choices = [(None, "-")] + [
+            (p.id, p.label) for p in Gene.query.all()
+        ]
+
+
 class NewCardForm(FlaskForm):
 
     title = StringField("Card title")
@@ -52,16 +83,20 @@ class NewCardForm(FlaskForm):
     select_method = SelectField("Method")
     select_sample = SelectField("Sample")
 
-    select_markers = FieldList(FormField(MarkerForm))
-    add_marker = SubmitField("+")
-    remove_marker = SubmitField("-")
+    add_project = SubmitField("+")
+    add_organism = SubmitField("+")
+    add_process = SubmitField("+")
+    add_method = SubmitField("+")
+    add_sample = SubmitField("+")
 
-    select_genes = FieldList(FormField(GeneForm))
-    add_gene = SubmitField("+")
-    remove_gene = SubmitField("-")
+    search_organism = StringField("Search for an organism")
+    select_new_organism = SelectField("Select the best match", choices=[])
 
-    comment = TextAreaField("Comment")
+    select_gene_mods = FieldList(FormField(GeneModForm))
+    add_gene_mod = SubmitField("+")
+    remove_gene_mod = SubmitField("-")
 
+    comment = TextAreaField("Comment", widget=TextArea())
     submit = SubmitField("save")
 
     def __init__(self, *args, **kwargs):
@@ -90,40 +125,76 @@ class EditCardForm(NewCardForm):
         super().__init__(*args, **kwargs)
         self.card_id = card_id
 
-    def reload_card(self):
+    def save_card(self, card_id=None):
+        if card_id is None:
+            card_id = self.card_id
+        card = self.reload_card(card_id)
+        gene_mods = [
+            get_gene_mod(gm.select_gene.data, gm.select_marker.data)
+            for gm in self.select_gene_mods.entries
+        ]
 
-        self.card = Card.query.filter_by(id=self.card_id).first()
-        self.title.data = self.card.title
+        card.update(
+            title=self.title.data,
+            project_id=self.select_project.data,
+            organism_id=self.select_organism.data,
+            process_id=self.select_process.data,
+            sample_id=self.select_sample.data,
+            method_id=self.select_method.data,
+            comment=self.comment.data,
+            gene_mods=gene_mods,
+        )
+        card.save()
+        log.info(f"saved card {card.id}")
+        return card.id
 
-        if self.card.project:
+    def reload_card(self, card_id=None):
+        if card_id is None:
+            card_id = self.card_id
+        card = Card.query.filter_by(id=card_id).first()
+        self.title.data = card.title
+        if card.comment:
+            self.comment.data = card.comment
+
+        if card.project:
+            self.select_project.data = card.project.id
             self.select_project.choices = [
-                (self.card.project.id, self.card.project.name)
+                (card.project.id, card.project.name)
             ] + self.select_project.choices
 
-        if self.card.organism:
+        if card.organism:
+            self.select_organism.data = card.organism.id
             self.select_organism.choices = [
-                (self.card.organism.id, self.card.organism.label),
+                (card.organism.id, card.organism.label),
             ] + self.select_organism.choices
-        if self.card.sample:
+
+        if card.sample:
+            self.select_sample.data = card.sample.id
             self.select_sample.choices = [
-                (self.card.sample.id, self.card.sample.label),
+                (card.sample.id, card.sample.label),
             ] + self.select_sample.choices
 
-        if self.card.process:
+        if card.process:
+            self.select_process.data = card.process.id
             self.select_process.choices = [
-                (self.card.process.id, self.card.process.label),
+                (card.process.id, card.process.label),
             ] + self.select_process.choices
 
-        if self.card.method:
+        if card.method:
+            self.select_method.data = card.method.id
             self.select_method.choices = [
-                (self.card.method.id, self.card.method.label),
+                (card.method.id, card.method.label),
             ] + self.select_method.choices
 
-        if self.card.comment:
-            self.comment.data = self.card.comment
+        for gene_mod in card.gene_mods:
+            entry = self.select_gene_mods.append_entry()
+            entry.select_marker.data = gene_mod.marker_id
+            entry.select_marker.choices = [
+                (gene_mod.marker_id, gene_mod.marker.label)
+            ] + entry.select_marker.choices
 
-        for marker in self.card.markers:
-            self.select_markers.append_entry((marker.id, marker.label))
-
-        for gene in self.card.genes:
-            self.select_genes.append_entry((gene.id, gene.label))
+            entry.select_gene.data = gene_mod.gene_id
+            entry.select_gene.choices = [
+                (gene_mod.gene_id, gene_mod.gene.label)
+            ] + entry.select_gene.choices
+        return card

@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container-narrow">
+  <h1 class="mt-5">Create a new user</h1>
+  <br/>
+    <form id="registerForm" class="form form-register" method="POST" action="" role="form">
+      {{ form.csrf_token }}
+
+      <div class="form-group">
+        {{form.password.label}}
+        {{form.password(placeholder="Password", class_="form-control")}}
+      </div>
+      <div class="form-group">
+        {{ form.confirm.label }}
+        {{ form.confirm(class_="form-control") }}
+      </div>
+      <div class="form-group">
+        {{ form.select_group.label }}
+        {{ form.select_group(class_="form-control") }}
+      </div>
+      <div class="form-group">
+        {{ form.firstname.label }}
+        {{ form.firstname(class_="form-control") }}
+      </div>
+      <div class="form-group">
+        {{ form.lastname.label }}
+        {{ form.lastname(class_="form-control") }}
+      </div>
+      <div class="form-group">
+        {{ form.is_admin.label }}
+        {{ form.is_admin(class_="form-control") }}
+      </div>
+      <p><input class="btn btn-primary" type="submit" value="Save modification"></p>
+    </form>
+</div>
+{% endblock %}

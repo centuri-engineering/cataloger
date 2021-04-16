@@ -12,11 +12,20 @@
   <div class="row mt-2 align-self-end">
     {{ form.csrf_token }}
     <div class="col align-self-end">
-      <label class="control-label mb-0">{{ Organism }}</label>
       {{ form.select_term(class="form-control form-control-sm m-0") }}
-      {{ form.submit() }}
     </div>
   </div>
+  <div class="form-row">
+    <a>
+      <button
+        type="submit"
+        class="btn btn-light"
+        style="width: 8rem;"
+        title="Save annotation">
+        <i class="fa fa-check"></i>
+    </a>
+  </div>
+</div>
 </form>
 
 {% endblock %}

@@ -4,10 +4,18 @@ import logging
 
 from environs import Env
 from flask_wtf import FlaskForm
-from wtforms import PasswordField, StringField, SubmitField, BooleanField, SelectField
-from wtforms.validators import DataRequired, Email, EqualTo, Length
+from wtforms import (
+    PasswordField,
+    StringField,
+    SubmitField,
+    BooleanField,
+    SelectField,
+    Label,
+)
+from wtforms.validators import DataRequired, EqualTo, Length
 from flask import current_app
 
+from flask_login import current_user
 from flask_ldap3_login.forms import LDAPLoginForm
 
 from cataloger.omero_login import AuthenticationResponseStatus
@@ -18,12 +26,9 @@ from .models import User, Group
 log = logging.getLogger(__name__)
 
 
-class LocalLoginForm(FlaskForm):
+class LocalRegisterForm(FlaskForm):
     username = StringField(
         "Username", validators=[DataRequired(), Length(min=3, max=25)]
-    )
-    email = StringField(
-        "Email", validators=[DataRequired(), Email(), Length(min=6, max=40)]
     )
     password = PasswordField(
         "Password", validators=[DataRequired(), Length(min=6, max=40)]
@@ -36,23 +41,25 @@ class LocalLoginForm(FlaskForm):
 
     def __init__(self, *args, **kwargs):
         """Create instance."""
-        super(RegisterForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.user = None
         self.select_group.choices = [(g.id, g.groupname) for g in Group.query.all()]
 
     def validate(self):
         """Validate the form."""
-        initial_validation = super(RegisterForm, self).validate()
+        initial_validation = super().validate()
         if not initial_validation:
             return False
         user = User.query.filter_by(username=self.username.data).first()
         if user:
             self.username.errors.append("Username already registered")
             return False
-        user = User.query.filter_by(email=self.email.data).first()
-        if user:
-            self.email.errors.append("Email already registered")
-            return False
+        self.user = User.create(
+            username=self.username.data,
+            active=True,
+            group_id=self.select_group.data,
+        )
+        self.user.set_password(self.password.data)
         return True
 
 
@@ -69,7 +76,7 @@ class OmeroLoginForm(FlaskForm):
         if not valid:
             log.debug(
                 "Form validation failed before we had a chance to "
-                "check ldap. Reasons: '{0}'".format(self.errors)
+                "check omero. Reasons: '{0}'".format(self.errors)
             )
             return valid
 
@@ -79,12 +86,57 @@ class OmeroLoginForm(FlaskForm):
         result = omero_manager.authenticate(username, password)
         if result.status == AuthenticationResponseStatus.success:
             self.user = omero_manager._save_user(result.user_info)
+            log.info("Registered user {%s} from omero ", username)
             return True
         else:
             self.user = None
             self.username.errors.append("Invalid Username/Password.")
             self.password.errors.append("Invalid Username/Password.")
             return False
+
+
+class EditUserForm(LocalRegisterForm):
+
+    old_password = PasswordField("Old password", validators=[DataRequired()])
+    firstname = StringField("First name", validators=[DataRequired()])
+    lastname = StringField("Last name", validators=[DataRequired()])
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.password.label.text = "New password"
+        self.confirm.label.text = "Confirm new password"
+        self.user = None
+
+    def validate(self, *args, **kwargs):
+
+        if not FlaskForm.validate(self, *args, **kwargs):
+            return False
+        if self.user.password and not self.user.check_password(self.old_password.data):
+            self.old_password.errors.append("Invalid old password")
+            return False
+        return True
+
+
+class CreateUserForm(LocalRegisterForm):
+
+    firstname = StringField("First name", validators=[DataRequired()])
+    lastname = StringField("Last name", validators=[DataRequired()])
+    is_admin = BooleanField("admin privileges")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = None
+
+    def validate(self, *args, **kwargs):
+
+        if not super().validate(*args, **kwargs):
+            return False
+        self.user.update(
+            first_name=self.firstname.data,
+            last_name=self.firstname.data,
+            is_admin=self.is_admin.data,
+        )
+        return True
 
 
 class NewGroupForm(FlaskForm):
@@ -121,4 +173,4 @@ if env.str("AUTH_METHOD") == "OMERO":
 elif env.str("AUTH_METHOD") == "LDAP":
     RegisterForm = LDAPLoginForm
 else:
-    RegisterForm = LocalLoginForm
+    RegisterForm = LocalRegisterForm
