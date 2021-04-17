@@ -92,7 +92,7 @@
       {% if form.add_organism.data %}
         {% if not form.search_organism.data %}
            {{ form.search_organism() }}
-        {% else  %}
+        {% elif new == "organisms"  %}
           {{ form.select_new_organism() }}
         {% endif %}
       {% endif %}
@@ -211,23 +211,9 @@
     <hr/>
   </div>
   <div class="form-row">
-      <a>
-        <button
-          type="submit"
-          class="btn btn-light"
-          style="width: 8rem;"
-          title="Save card">
-          <i class="fa fa-save"></i></button>
-      </a>
-      <a target="blank">
-        <button
-          type="button"
-          onClick="window.location.reload(true)"
-          class="btn btn-light"
-          style="width: 4rem;"
-          title="Reload menus">
-          <i class="fa fa-refresh"></i></button>
-      </a>
+    {{ form.submit() }}
+  </div>
+  <div class="form-row">
       <a href={{ url_for("user.cards") }}>
         <button
           type="button"
