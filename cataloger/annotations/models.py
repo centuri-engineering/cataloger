@@ -6,8 +6,6 @@ import subprocess
 import datetime as dt
 import toml
 
-from sqlalchemy.exc import OperationalError
-
 
 from cataloger.database import (
     Column,
@@ -17,7 +15,6 @@ from cataloger.database import (
     relationship,
 )
 
-from ..user.models import User
 
 """Many to many tables
 """

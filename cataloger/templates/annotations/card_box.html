@@ -52,13 +52,6 @@
   <div class="form-row">
     <hr/>
   </div>
-</form>
-
-<form action=""
-      class="form m-2 p-3"
-      method="post"
-      name="create_card">
-  {{ form.csrf_token }}
   <div class="form-row" title="The project for this experiment">
     <!-- Project -->
     <div class="col-2">
@@ -83,135 +76,133 @@
       </label>
     </div>
     <div class="col-3">
-      {{ form.select_organism() }}
+      {{ form.select_organism.select() }}
     </div>
     <div class="col-1">
-      {{ form.add_organism() }}
+      {{ form.select_organism.add() }}
     </div>
     <div class="col-2">
-      {% if form.add_organism.data %}
-        {% if not form.search_organism.data %}
-           {{ form.search_organism() }}
+      {% if form.select_organism.add.data %}
+        {% if not form.select_organism.search.data %}
+           {{ form.select_organism.search() }}
         {% elif new == "organisms"  %}
-          {{ form.select_new_organism() }}
+          {{ form.select_organism.select_new() }}
         {% endif %}
       {% endif %}
     </div>
     <div class="col-2">
-      {% if form.add_organism.data %}
-        {% if not form.search_organism.data %}
+      {% if form.select_organism.add.data %}
+          {% if form.select_organism.search.data %}
       <button
         type="submit"
         class="btn btn-light"
-        style="width: 8rem;"
-        title="search">
-        <i class="fa fa-search"></i></button>
-      {% else  %}
-      <button
-        type="submit"
-        class="btn btn-light"
-        style="width: 8rem;"
+        style="width: 4rem;"
         title="add term">
         <i class="fa fa-check"></i></button>
-      {% endif %}
+           {% else  %}
+      <button
+        type="submit"
+        class="btn btn-light"
+        style="width: 4rem;"
+        title="search">
+        <i class="fa fa-search"></i></button>
+           {% endif %}
       {% endif %}
     </div>
   </div>
 
-  <div class="form-row" title="the organ, cell line or epithelium of interest">
-    <!-- Sample -->
-    <div class="col-2">
-      <label class="control-label mb-0">
-        <i class="fa fa-flask"></i> <b>Sample</b>
-      </label>
-    </div>
-    <div class="col-5">
-      {{ form.select_sample() }}
-    </div>
-  </div>
-  <div class="form-row" title="The observed phenomenon or mechanism">
-    <!-- Process -->
-    <div class="col-2">
-      <label class="control-label mb-0">
-        <i class="fa fa-cogs"></i> <b>Observed Process</b>
-      </label>
-    </div>
-    <div class="col-5">
-      {{ form.select_process() }}
-    </div>
-  </div>
-  <div class="form-row" title="The experimental method (e.g SHG, FRAP or wide field)">
-    <!-- Method -->
-    <div class="col-2">
-      <label class="control-label mb-0">
-        <i class="fa fa-tools"></i> <b>Method</b>
-      </label>
-    </div>
-    <div class="col-5">
-      {{ form.select_method() }}
-    </div>
-  </div>
-</form>
-<form action=""
-      class="form m-2 p-3"
-      method="post"
-      name="create_card">
-  {{ form.csrf_token }}
-  <div class="form-row">
-    <!-- Gene mod -->
-    <div class="col-2">
-      <label class="control-label mb-0"
-             title="Gene and their modification">
-        <i class="fas fa-dna"></i><i class="fas fa-map-marker"></i> <b>Gene-Marker pairs</b>
-      </label>
-    </div>
-  </div>
-  <div class="form-row">
-    <div class="col-2">
-    </div>
-    <div class="col-1">
-      <label class="control-label mb-0"
-             title="Gene or protein">
-        <i class="fas fa-dna"></i> <b>Genes</b>
-      </label>
-    </div>
-    </div>
-    <div class="col-1">
-      <label
-        class="control-label mb-0"
-        title="Gene modifiers">
-        <i class="fas fa-map-marker"></i> <b>Markers</b>
-      </label>
-    </div>
-  </div>
-  {% for gene_mod_form in form.select_gene_mods.entries %}
-  <div class="form-row">
-    <div class="col-2">
-    </div>
-    <div class="col-2">
-        {{ gene_mod_form.select_gene() }}
-    </div>
-    <div class="col-2">
-        {{ gene_mod_form.select_marker() }}
-    </div>
-  </div>
-  {% endfor %}
+ <!--  <div class="form-row" title="the organ, cell line or epithelium of interest"> -->
+ <!--    <\!-- Sample -\-> -->
+ <!--    <div class="col-2"> -->
+ <!--      <label class="control-label mb-0"> -->
+ <!--        <i class="fa fa-flask"></i> <b>Sample</b> -->
+ <!--      </label> -->
+ <!--    </div> -->
+ <!--    <div class="col-5"> -->
+ <!--      {{ form.select_sample() }} -->
+ <!--    </div> -->
+ <!--  </div> -->
+ <!--  <div class="form-row" title="The observed phenomenon or mechanism"> -->
+ <!--    <\!-- Process -\-> -->
+ <!--    <div class="col-2"> -->
+ <!--      <label class="control-label mb-0"> -->
+ <!--        <i class="fa fa-cogs"></i> <b>Observed Process</b> -->
+ <!--      </label> -->
+ <!--    </div> -->
+ <!--    <div class="col-5"> -->
+ <!--      {{ form.select_process() }} -->
+ <!--    </div> -->
+ <!--  </div> -->
+ <!--  <div class="form-row" title="The experimental method (e.g SHG, FRAP or wide field)"> -->
+ <!--    <\!-- Method -\-> -->
+ <!--    <div class="col-2"> -->
+ <!--      <label class="control-label mb-0"> -->
+ <!--        <i class="fa fa-tools"></i> <b>Method</b> -->
+ <!--      </label> -->
+ <!--    </div> -->
+ <!--    <div class="col-5"> -->
+ <!--      {{ form.select_method() }} -->
+ <!--    </div> -->
+ <!--  </div> -->
+ <!--  <div class="form-row"> -->
+ <!--    <hr/> -->
+ <!--  </div> -->
+ <!--  <div class="form-row"> -->
+ <!--    <\!-- Gene mod -\-> -->
+ <!--    <div class="col-2"> -->
+ <!--      <label class="control-label mb-0" -->
+ <!--             title="Gene and their modification"> -->
+ <!--        <i class="fas fa-dna"></i><i class="fas fa-map-marker"></i> <b>Gene-Marker pairs</b> -->
+ <!--      </label> -->
+ <!--    </div> -->
+ <!--  </div> -->
+ <!--  <div class="form-row"> -->
+ <!--    <div class="col-2"> -->
+ <!--    </div> -->
+ <!--    <div class="col-1"> -->
+ <!--      <label class="control-label mb-0" -->
+ <!--             title="Gene or protein"> -->
+ <!--        <i class="fas fa-dna"></i> <b>Genes</b> -->
+ <!--      </label> -->
+ <!--    </div> -->
+ <!--    </div> -->
+ <!--    <div class="col-1"> -->
+ <!--      <label -->
+ <!--        class="control-label mb-0" -->
+ <!--        title="Gene modifiers"> -->
+ <!--        <i class="fas fa-map-marker"></i> <b>Markers</b> -->
+ <!--      </label> -->
+ <!--    </div> -->
+ <!--  </div> -->
 
-  <div class="form-row">
-    <div class="col-2">
-      <a title="add a gene modification entry">
-        {{ form.add_gene_mod() }}
-      </a>
-      <a title="remove last entry">
-        {{ form.remove_gene_mod() }}
-      </a>
-    </div>
-  </div>
+ <!-- {% for gene_mod_form in form.select_gene_mods.entries %} -->
+ <!--  <div class="form-row"> -->
+ <!--    <div class="col-2"> -->
+ <!--    </div> -->
+ <!--    <div class="col-2"> -->
+ <!--        {{ gene_mod_form.select_gene() }} -->
+ <!--    </div> -->
+ <!--    <div class="col-2"> -->
+ <!--        {{ gene_mod_form.select_marker() }} -->
+ <!--    </div> -->
+ <!--  </div> -->
+ <!--  {% endfor %} -->
+
+ <!--  <div class="form-row"> -->
+ <!--    <div class="col-2"> -->
+ <!--      <a title="add a gene modification entry"> -->
+ <!--        {{ form.add_gene_mod() }} -->
+ <!--      </a> -->
+ <!--      <a title="remove last entry"> -->
+ <!--        {{ form.remove_gene_mod() }} -->
+ <!--      </a> -->
+ <!--    </div> -->
+ <!--  </div> -->
   <div class="form-row">
     <hr/>
   </div>
   <div class="form-row">
-    {{ form.submit() }}
+    <h4>{{ form.save() }}</h4>
   </div>
   <div class="form-row">
       <a href={{ url_for("user.cards") }}>

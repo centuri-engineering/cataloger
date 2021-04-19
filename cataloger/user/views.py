@@ -53,8 +53,8 @@ def edit_user(username):
             form.user.set_password(form.password.data)
 
         return redirect(url_for("user.cards"))
-    else:
-        flash_errors(form)
+
+    flash_errors(form)
 
     form.firstname.data = form.user.first_name
     form.lastname.data = form.user.last_name
