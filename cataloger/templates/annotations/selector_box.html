@@ -1,0 +1,41 @@
+  <div class="form-row">
+    <div class="col-2">
+      <label class="control-label mb-0" title="{{ selector.kls.help() }}">
+        <i class="fa {{ selector.kls.__icon__ }}"></i> <b>{{ selector.kls.__label__ }}</b>
+      </label>
+    </div>
+    <div class="col-3">
+      {{ selector.select() }}
+    </div>
+    <div class="col-1">
+      {{ selector.add() }}
+    </div>
+    <div class="col-2">
+      {% if key == search %}
+        {{ selector.search() }}
+      {% elif key == new  %}
+        {{ selector.select_new() }}
+      {% endif %}
+    </div>
+    <div class="col-2">
+      {% if key == search %}
+      <a href={{ url_for("cards.edit_card", card_id=form.card_id, search=search) }}>
+      <button
+        type="submit"
+        class="btn btn-light"
+        style="width: 4rem;"
+        title="search">
+        <i class="fa fa-search"></i></button>
+      </a>
+      {% elif key == new %}
+      <a href={{ url_for("cards.edit_card", card_id=form.card_id, new=new) }}>
+      <button
+        type="submit"
+        class="btn btn-light"
+        style="width: 4rem;"
+        title="add term">
+        <i class="fa fa-check"></i></button>
+      </a>
+      {% endif %}
+    </div>
+  </div>

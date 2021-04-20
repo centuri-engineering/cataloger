@@ -50,20 +50,6 @@ class GeneForm(FlaskForm):
         self.select_gene.choices = [(p.id, p.label) for p in Gene.query.all()]
 
 
-class GeneModForm(FlaskForm):
-    select_gene = SelectField("Gene")
-    select_marker = SelectField("Marker")
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.select_marker.choices = [(None, "-")] + [
-            (p.id, p.label) for p in Marker.query.all()
-        ]
-        self.select_gene.choices = [(None, "-")] + [
-            (p.id, p.label) for p in Gene.query.all()
-        ]
-
-
 class AnnotationForm(FlaskForm):
 
     select = SelectField("Select the best match", choices=[])
@@ -73,6 +59,10 @@ class AnnotationForm(FlaskForm):
 
 
 class AnnotationFields(FormField):
+    def __init__(self, kls=None, *args, **kwargs):
+        super().__init__(AnnotationForm, *args, **kwargs)
+        self.kls = kls
+
     @property
     def choices(self):
         log.info("Accessing choices property ")
@@ -87,6 +77,24 @@ class AnnotationFields(FormField):
     def data(self):
         return self.select.data
 
+    @data.setter
+    def data(self, data):
+        self.select.data = data
+
+
+class GeneModForm(FlaskForm):
+    select_gene = AnnotationFields(Gene)
+    select_marker = AnnotationFields(Marker)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.select_marker.choices = [(None, "-")] + [
+            (p.id, p.label) for p in Marker.query.all()
+        ]
+        self.select_gene.choices = [(None, "-")] + [
+            (p.id, p.label) for p in Gene.query.all()
+        ]
+
 
 class NewCardForm(FlaskForm):
 
@@ -94,15 +102,11 @@ class NewCardForm(FlaskForm):
     comment = TextAreaField("Comment", widget=TextArea())
 
     select_project = SelectField("Project")
-    select_organism = AnnotationFields(AnnotationForm)
-    select_process = AnnotationFields(AnnotationForm)
-    select_method = AnnotationFields(AnnotationForm)
-    select_sample = AnnotationFields(AnnotationForm)
 
-    select_organism = AnnotationFields(AnnotationForm)
-    select_process = AnnotationFields(AnnotationForm)
-    select_method = AnnotationFields(AnnotationForm)
-    select_sample = AnnotationFields(AnnotationForm)
+    select_organism = AnnotationFields(Organism)
+    select_process = AnnotationFields(Process)
+    select_method = AnnotationFields(Method)
+    select_sample = AnnotationFields(Sample)
 
     select_gene_mods = FieldList(FormField(GeneModForm))
     add_gene_mod = SubmitField("+")
@@ -113,22 +117,32 @@ class NewCardForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.select_project.choices = [(None, "-")] + [
-            (p.id, p.name) for p in Project.query.all()
-        ]
+        self._selectors = {
+            "organisms": self.select_organism,
+            "samples": self.select_sample,
+            "processes": self.select_process,
+            "methods": self.select_method,
+        }
+        if not self.select_gene_mods:
+            self.select_gene_mods.append_entry()
 
-        self.select_organism.choices = [(None, "-")] + [
-            (o.id, o.label) for o in Organism.query.all()
+    @property
+    def selectors(self):
+        for i, entry in enumerate(self.select_gene_mods.entries):
+            self._selectors.update(
+                {f"gene_{i}": entry.select_gene, f"marker_{i}": entry.select_marker}
+            )
+        return self._selectors
+
+    def update_choices(self, **filter_by_kwargs):
+        self.select_project.choices = [(None, "-")] + [
+            (p.id, p.label) for p in Project.query.filter_by(**filter_by_kwargs)
         ]
-        self.select_sample.choices = [(None, "-")] + [
-            (s.id, s.label) for s in Sample.query.all()
-        ]
-        self.select_process.choices = [(None, "-")] + [
-            (p.id, p.label) for p in Process.query.all()
-        ]
-        self.select_method.choices = [(None, "-")] + [
-            (m.id, m.label) for m in Method.query.all()
-        ]
+        for selector in self.selectors.values():
+            selector.choices = [(None, "-")] + [
+                (instance.id, instance.label)
+                for instance in selector.kls.query.filter_by(**filter_by_kwargs)
+            ]
 
     def create_card(self, current_user):
 
@@ -191,7 +205,7 @@ class EditCardForm(NewCardForm):
             self.comment.data = card.comment
 
         if card.project:
-            self.select_project.choices.insert(0, (card.project.id, card.project.name))
+            self.select_project.choices.insert(0, (card.project.id, card.project.label))
 
         if card.organism:
             self.select_organism.choices.insert(

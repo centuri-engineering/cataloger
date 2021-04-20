@@ -1,0 +1,41 @@
+  <div class="form-row" title=selector>
+    <div class="col-2">
+      <label class="control-label mb-0">
+        <i class="fa fa-bug"></i> <b>{{ selector.kls.__name__ }}</b>
+      </label>
+    </div>
+    <div class="col-3">
+      {{ selector.select() }}
+    </div>
+    <div class="col-1">
+      {{ selector.add() }}
+    </div>
+    <div class="col-2">
+      {% if selector.add.data %}
+        {% if not selector.search.data %}
+           {{ selector.search() }}
+        {% elif new == "organisms"  %}
+          {{ selector.select_new() }}
+        {% endif %}
+      {% endif %}
+    </div>
+    <div class="col-2">
+      {% if selector.add.data %}
+          {% if selector.search.data %}
+      <button
+        type="submit"
+        class="btn btn-light"
+        style="width: 4rem;"
+        title="add term">
+        <i class="fa fa-check"></i></button>
+           {% else  %}
+      <button
+        type="submit"
+        class="btn btn-light"
+        style="width: 4rem;"
+        title="search">
+        <i class="fa fa-search"></i></button>
+           {% endif %}
+      {% endif %}
+    </div>
+  </div>

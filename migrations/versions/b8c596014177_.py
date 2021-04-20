@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: f8fcbb65dd6d
+Revision ID: b8c596014177
 Revises: 
-Create Date: 2021-04-19 08:52:43.658981
+Create Date: 2021-04-20 15:33:23.332855
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'f8fcbb65dd6d'
+revision = 'b8c596014177'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -47,19 +47,6 @@ def upgrade():
     sa.UniqueConstraint('email'),
     sa.UniqueConstraint('username')
     )
-    op.create_table('methods',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('label', sa.String(length=128), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('bioportal_id', sa.String(length=128), nullable=True),
-    sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.Column('group_id', sa.Integer(), nullable=True),
-    sa.Column('ontology_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['group_id'], ['groups.id'], ),
-    sa.ForeignKeyConstraint(['ontology_id'], ['ontologies.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('id')
-    )
     op.create_table('organisms',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('label', sa.String(length=128), nullable=False),
@@ -67,13 +54,15 @@ def upgrade():
     sa.Column('bioportal_id', sa.String(length=128), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=True),
     sa.Column('ontology_id', sa.Integer(), nullable=True),
+    sa.Column('group_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['group_id'], ['groups.id'], ),
     sa.ForeignKeyConstraint(['ontology_id'], ['ontologies.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('projects',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('name', sa.String(length=128), nullable=False),
+    sa.Column('label', sa.String(length=128), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('group_id', sa.Integer(), nullable=False),
@@ -106,6 +95,21 @@ def upgrade():
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('markers',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('label', sa.String(length=128), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('bioportal_id', sa.String(length=128), nullable=True),
+    sa.Column('user_id', sa.Integer(), nullable=True),
+    sa.Column('group_id', sa.Integer(), nullable=True),
+    sa.Column('ontology_id', sa.Integer(), nullable=True),
+    sa.Column('organism_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['group_id'], ['groups.id'], ),
+    sa.ForeignKeyConstraint(['ontology_id'], ['ontologies.id'], ),
+    sa.ForeignKeyConstraint(['organism_id'], ['organisms.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('methods',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('label', sa.String(length=128), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
@@ -202,12 +206,12 @@ def downgrade():
     op.drop_table('cards')
     op.drop_table('samples')
     op.drop_table('processes')
+    op.drop_table('methods')
     op.drop_table('markers')
     op.drop_table('genes')
     op.drop_table('roles')
     op.drop_table('projects')
     op.drop_table('organisms')
-    op.drop_table('methods')
     op.drop_table('users')
     op.drop_table('ontologies')
     op.drop_table('groups')

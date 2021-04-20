@@ -83,6 +83,26 @@ ontologies = {
 }
 
 
+@blueprint.route("/new-project/", methods=["GET", "POST"])
+@login_required
+def new_project():
+    form = NewProjectForm()
+    # if form.validate_on_submit():
+    if request.method == "POST":
+        project = Project(
+            label=form.name.data,
+            comment=form.comment.data,
+            user_id=current_user.id,
+            group_id=current_user.group_id,
+        )
+        flash(
+            f"New project {project.label} created by user {current_user.id}", "success"
+        )
+        project.save()
+        return redirect(url_for(".new_project"))
+    return render_template("annotations/new_project.html", form=form)
+
+
 def search_bioportal(search_text, **other_params):
     """Searches the bioontology database for the term search_text"""
 
@@ -114,26 +134,35 @@ def annotation_choices(cls, search_term=None):
     return suggestions, choices
 
 
-def new_annotation(cls, term, card_id=None):
+def new_annotation(kls, term, card_id=None):
     """New annotation."""
 
-    match = classes[cls].query.filter_by(label=term["prefLabel"]).first()
+    match = kls.query.filter_by(label=term["prefLabel"]).first()
     if match:
         flash(f"The term {term['prefLabel']} is already registered", "warning")
-        return match
+        if match.group_id == current_user.group_id:
+            return match
+        term["@id"] = match.bioportal_id  # use the same ref
 
-    if cls == "organisms":
-        new = classes[cls](label=term["prefLabel"], bioportal_id=term["@id"])
+    if kls is Organism:
+        new = kls(
+            label=term["prefLabel"],
+            bioportal_id=term["@id"],
+            user_id=current_user.id,
+            group_id=current_user.group_id,
+        )
         new.save()
         flash(f"Term {term['prefLabel']} registered", "success")
         return new
 
     card = Card.get_by_id(card_id)
     organism_id = card.organism_id if card else 0
-    new = classes[cls](
+    new = kls(
         label=term["prefLabel"],
         bioportal_id=term["@id"],
         organism_id=organism_id,
+        user_id=current_user.id,
+        group_id=current_user.group_id,
     )
     flash(f"Term {term['prefLabel']} registered", "success")
 
@@ -157,26 +186,6 @@ def _format_label(term):
         return f"{label} \t ({ontology})"
 
 
-@blueprint.route("/new-project/", methods=["GET", "POST"])
-@login_required
-def new_project():
-    form = NewProjectForm()
-    # if form.validate_on_submit():
-    if request.method == "POST":
-        project = Project(
-            name=form.name.data,
-            comment=form.comment.data,
-            user_id=current_user.id,
-            group_id=current_user.group_id,
-        )
-        flash(
-            f"New project {project.name} created by user {current_user.id}", "success"
-        )
-        project.save()
-        return redirect(url_for(".new_project"))
-    return render_template("annotations/new_project.html", form=form)
-
-
 @blueprint.route("/")
 @login_required
 def cards(scope="group"):
@@ -191,6 +200,83 @@ def cards(scope="group"):
     return render_template("annotations/cards.html", cards=cards_)
 
 
+def search_annotation(form, key, selector, card=None):
+
+    search_term = selector.search.data
+    flash(f"searching for {search_term}", "info")
+    suggestions, choices = annotation_choices(key, search_term=search_term)
+    current_app.suggestions = suggestions
+    form.update_choices(group_id=current_user.group_id)
+    form.reload_card()
+    selector.select_new.choices = choices
+    if card:
+        return render_template(
+            "annotations/new_card.html", form=form, new=key, card_id=card.id
+        )
+    return render_template("annotations/new_card.html", form=form, new=key)
+
+
+def add_annotation(form, key, selector, card=None):
+
+    term = current_app.suggestions[selector.select_new.data]
+    new = new_annotation(selector.kls, term)
+
+    selector.choices.insert(0, (new.id, new.label))
+    selector.data = new.id
+    if card:
+        card.update(organism_id=new.id)
+        return redirect(url_for("cards.edit_card", card_id=form.card_id))
+    return render_template("annotations/new_card.html", form=form)
+
+
+@blueprint.route(
+    "/edit/<card_id>",
+    methods=["GET", "POST"],
+    defaults={"card_id": 0, "new": "none", "search": "none"},
+)
+@blueprint.route(
+    "/edit/<card_id>",
+    methods=["GET", "POST"],
+)
+@login_required
+def edit_card(card_id, search=None, new=None):
+
+    card = Card.query.filter_by(id=card_id).first()
+    if card.user_id != current_user.id:
+        flash("You can only edit your own cards, consider cloning instead")
+        return redirect(url_for("user.cards"))
+    form = EditCardForm(card_id=card_id)
+    form.update_choices(group_id=current_user.group_id)
+    for key, selector in form.selectors.items():
+        if selector.search.data:
+            search = key
+            return search_annotation(form, search, selector, card)
+        if selector.select_new.data:
+            return add_annotation(form, key, selector, card)
+
+    if form.add_gene_mod.data:
+        form.select_gene_mods.append_entry()
+        return render_template("annotations/edit_card.html", form=form, card_id=card_id)
+
+    if form.remove_gene_mod.data and len(form.select_gene_mods):
+        form.select_gene_mods.pop_entry()
+        return render_template("annotations/edit_card.html", form=form, card_id=card_id)
+    for key, selector in form.selectors.items():
+        if selector.add.data:
+            flash(f"now searching for new {key}", "warning")
+            return render_template(
+                "annotations/edit_card.html", form=form, search=key, card_id=card_id
+            )
+    if request.method == "POST":  # form.validate_on_submit():
+        flash(f"Edited {card.title} by user {current_user.username}", "success")
+        form.save_card()
+        return redirect(url_for("user.cards"))
+    form.reload_card()
+    return render_template(
+        "annotations/edit_card.html", form=form, search=search, new=new, card_id=card_id
+    )
+
+
 @blueprint.route(
     "/new-card/",
     methods=["GET", "POST"],
@@ -200,26 +286,14 @@ def new_card():
     """Creates a card"""
 
     form = NewCardForm()
-    # if form.add_organism.data:  # and form.search_organism.data:
-    #     flash("searching for new organisms", "warning")
-    #     if form.search_organism.data:
-    #         search_term = form.search_organism.data
-    #         flash(f"searching for {search_term}", "warning")
-    #         suggestions, choices = annotation_choices(
-    #             "organisms", search_term=search_term
-    #         )
-    #         current_app.suggestions = suggestions
-    #         form.select_new_organism.choices = choices
-    #         return render_template(
-    #             "annotations/new_card.html", form=form, new="organisms"
-    #         )
-    # if form.select_new_organism.data:
-    #     flash(f"Selected {form.select_new_organism.data}", "warning")
-    #     term = current_app.suggestions[form.select_new_organism.data]
-    #     new = new_annotation("organisms", term)
-    #     form.select_organism.choices.insert(0, (new.id, new.label))
-    #     form.select_organism.data = new.id
-    #     return render_template("annotations/new_card.html", form=form)
+    form.update_choices(group_id=current_user.group_id)
+
+    for key, selector in form.selectors.items():
+        if selector.search.data:
+            search = key
+            return search_annotation(form, search, selector, card=None)
+        if selector.select_new.data:
+            return add_annotation(form, key, selector, card=None)
 
     if form.add_gene_mod.data:
         form.select_gene_mods.append_entry()
@@ -232,6 +306,11 @@ def new_card():
     if request.method == "POST":  #  form.validate_on_submit():
         card = form.create_card(current_user)
         return redirect(url_for("user.cards", card_id=card.id))
+
+    for key, selector in form.selectors.items():
+        if selector.add.data:
+            flash(f"now searching for new {key}", "warning")
+            return render_template("annotations/new_card.html", form=form, search=key)
 
     return render_template("annotations/new_card.html", form=form)
 
@@ -250,59 +329,6 @@ def delete_card(card_id):
     card.delete()
 
     return redirect(url_for("user.cards"))
-
-
-@blueprint.route(
-    "/edit/<card_id>",
-    methods=["GET", "POST"],
-)
-@login_required
-def edit_card(card_id):
-    card = Card.query.filter_by(id=card_id).first()
-    # card.organism = Organism.get_by_id(1)
-    if card.user_id != current_user.id:
-        flash("You can only edit your own cards, consider cloning instead")
-        return redirect(url_for("user.cards"))
-    form = EditCardForm(card_id=card_id)
-
-    if form.select_organism.select.data:
-        flash("searching for new organisms", "warning")
-        if form.select_organism.search.data:
-            search_term = form.select_organism.search.data
-            flash(f"searching for {search_term}", "warning")
-            suggestions, choices = annotation_choices(
-                "organisms", search_term=search_term
-            )
-            current_app.suggestions = suggestions
-            form.select_organism.select_new.choices = choices
-            return render_template(
-                "annotations/edit_card.html", form=form, new="organisms"
-            )
-        return render_template("annotations/edit_card.html", form=form, new="organisms")
-    if form.select_organism.select_new.data:
-        term = current_app.suggestions[form.select_organism.select_new.data]
-        new = new_annotation("organisms", term)
-
-        form.select_organism.choices.insert(0, (new.id, new.label))
-        form.select_organism.data = new.id
-        card.update(organism_id=new.id)
-        return redirect(url_for("cards.edit_card", card_id=form.card_id))
-
-    if form.add_gene_mod.data:
-        form.select_gene_mods.append_entry()
-        return render_template("annotations/edit_card.html", form=form)
-
-    if form.remove_gene_mod.data and len(form.select_gene_mods):
-        form.select_gene_mods.pop_entry()
-        return render_template("annotations/edit_card.html", form=form)
-
-    if request.method == "POST":  # form.validate_on_submit():
-        flash(f"Edited {card.title} by user {current_user.username}", "success")
-        form.save_card()
-        return redirect(url_for("user.cards"))
-
-    form.reload_card()
-    return render_template("annotations/edit_card.html", form=form)
 
 
 @blueprint.route(
@@ -348,7 +374,12 @@ def clone_card(card_id):
     )
     cloned.save()
     flash(f"Card {card.title} cloned by user {current_user.id}", "success")
-    return redirect(url_for(f"cards.edit_card", card_id=cloned.id))
+    return redirect(
+        url_for(
+            f"cards.edit_card",
+            card_id=cloned.id,
+        )
+    )
 
 
 @blueprint.route(

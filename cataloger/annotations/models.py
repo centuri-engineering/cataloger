@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
 """User models."""
-import os
-import tempfile
-import subprocess
 import datetime as dt
 import toml
-
 
 from cataloger.database import (
     Column,
@@ -132,7 +128,7 @@ class Card(PkModel):
 
 class Project(PkModel):
     __tablename__ = "projects"
-    name = Column(db.String(128), nullable=False)
+    label = Column(db.String(128), nullable=False)
     created_at = Column(db.DateTime, nullable=False, default=dt.datetime.utcnow)
     user_id = reference_col("users", nullable=False)
     user = relationship("User", backref=__tablename__)
@@ -162,24 +158,36 @@ class Annotation(PkModel):
     label = Column(db.String(128), nullable=False)
     created_at = Column(db.DateTime, nullable=False, default=dt.datetime.utcnow)
     bioportal_id = Column(db.String(128), nullable=True)
+    __icon__ = "fa-search"
+    __label__ = "Abstract annotation"
+
+    @classmethod
+    def help(cls):
+        return cls.__doc__.split("\n")[0]
 
 
 class Organism(Annotation):
-    """An organism in the taxonomy sense,
+    """An organism in the taxonomy sense, or an experimental model
 
 
     Examples
     --------
     - fruit fly (Drosophila melanogaster)
     - mouse (Mus musculus)
-    - human (Homo sapiens)
+    - Hela Cells
+    - Xaenopus Laevis egg extract
     """
 
     __tablename__ = "organisms"
     user_id = reference_col("users", nullable=True)
-    ontology_id = reference_col("ontologies", nullable=True)
     user = relationship("User", backref=__tablename__)
+    ontology_id = reference_col("ontologies", nullable=True)
     ontology = relationship("Ontology", backref=__tablename__)
+    group_id = reference_col("groups", nullable=True)
+    group = relationship("Group", backref=__tablename__)
+
+    __icon__ = "fa-bug"
+    __label__ = "Experimental Model"
 
 
 class Process(Annotation):
@@ -194,6 +202,8 @@ class Process(Annotation):
     """
 
     __tablename__ = "processes"
+    __icon__ = "fa-cogs"
+    __label__ = "Observed Process"
     user_id = reference_col("users", nullable=True)
     user = relationship("User", backref=__tablename__)
     group_id = reference_col("groups", nullable=True)
@@ -209,13 +219,15 @@ class Sample(Annotation):
 
     Examples
     --------
-    - a cell line (e.g. HCT116)
+    - a cell population within the model (e.g. the mesoderm)
     - an organ (e.g. cerebelum)
-    - a tissue (e.g. the drosophila wing disk)
+    - a part of the epithelium (e.g apical)
     - an organelle
     """
 
     __tablename__ = "samples"
+    __icon__ = "fa-flask"
+    __label__ = "Sample"
     user_id = reference_col("users", nullable=True)
     user = relationship("User", backref=__tablename__)
     group_id = reference_col("groups", nullable=True)
@@ -237,18 +249,31 @@ class Method(Annotation):
     """
 
     __tablename__ = "methods"
+    __icon__ = "fa-tools"
+    __label__ = "Method"
     user_id = reference_col("users", nullable=True)
     user = relationship("User", backref=__tablename__)
     group_id = reference_col("groups", nullable=True)
     group = relationship("Group", backref=__tablename__)
     ontology_id = reference_col("ontologies", nullable=True)
     ontology = relationship("Ontology", backref=__tablename__)
+    organism_id = reference_col("organisms", nullable=True)
+    organism = relationship("Organism", backref=__tablename__)
 
 
 class Marker(Annotation):
-    """A fluorescent marker or other contrast agent"""
+    """A fluorescent marker, other contrast agent, or gene modification
+
+    Examples
+    --------
+    - eGFP
+    - Alexa 488
+    - RNAi
+    """
 
     __tablename__ = "markers"
+    __icon__ = "fa-map-marker"
+    __label__ = "Marker or deletion method"
     user_id = reference_col("users", nullable=True)
     user = relationship("User", backref=__tablename__)
     group_id = reference_col("groups", nullable=True)
@@ -270,6 +295,8 @@ class Gene(Annotation):
     """
 
     __tablename__ = "genes"
+    __icon__ = "fa-dna"
+    __label__ = "Gene"
     user_id = reference_col("users", nullable=True)
     user = relationship("User", backref=__tablename__)
     ontology_id = reference_col("ontologies", nullable=True)

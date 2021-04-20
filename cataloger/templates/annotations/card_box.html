@@ -8,11 +8,7 @@
       Use the various menus to define you experiment.
       If you do not
       find a suitable entry, hit the <i class="fa fa-plus"></i> icon
-      to search for a new term (opens a new tab or window in your browser).
-    </p>
-    <p class="col-md-5 fs-4">
-      Once you have added a term, <b>save your card</b> by clicking <i class="fa fa-save"></i>, then
-      reload the page with <i class="fa fa-refresh"></i>.
+      to search for a new term.
     </p>
     <p class="col-md-5 fs-4">
       You can put <b>#hashtags</b> in the <i class="fa fa-comment"></i>  section.
@@ -68,136 +64,17 @@
       {{ form.select_project() }}
     </div>
   </div>
-  <div class="form-row" title="The binomial name of your bug">
-    <!-- Organism -->
-    <div class="col-2">
-      <label class="control-label mb-0">
-        <i class="fa fa-bug"></i> <b>Experimental Model</b>
-      </label>
-    </div>
-    <div class="col-3">
-      {{ form.select_organism.select() }}
-    </div>
-    <div class="col-1">
-      {{ form.select_organism.add() }}
-    </div>
-    <div class="col-2">
-      {% if form.select_organism.add.data %}
-        {% if not form.select_organism.search.data %}
-           {{ form.select_organism.search() }}
-        {% elif new == "organisms"  %}
-          {{ form.select_organism.select_new() }}
-        {% endif %}
-      {% endif %}
-    </div>
-    <div class="col-2">
-      {% if form.select_organism.add.data %}
-          {% if form.select_organism.search.data %}
-      <button
-        type="submit"
-        class="btn btn-light"
-        style="width: 4rem;"
-        title="add term">
-        <i class="fa fa-check"></i></button>
-           {% else  %}
-      <button
-        type="submit"
-        class="btn btn-light"
-        style="width: 4rem;"
-        title="search">
-        <i class="fa fa-search"></i></button>
-           {% endif %}
-      {% endif %}
-    </div>
+
+  {% for key, selector in form.selectors.items() %}
+  {% if not (key.startswith("gene") or key.startswith("marker")) %}
+  {% include "annotations/selector_box.html" %}
+  {% endif %}
+  {% endfor %}
+
+  <div class="form-row">
+    <hr/>
   </div>
-
- <!--  <div class="form-row" title="the organ, cell line or epithelium of interest"> -->
- <!--    <\!-- Sample -\-> -->
- <!--    <div class="col-2"> -->
- <!--      <label class="control-label mb-0"> -->
- <!--        <i class="fa fa-flask"></i> <b>Sample</b> -->
- <!--      </label> -->
- <!--    </div> -->
- <!--    <div class="col-5"> -->
- <!--      {{ form.select_sample() }} -->
- <!--    </div> -->
- <!--  </div> -->
- <!--  <div class="form-row" title="The observed phenomenon or mechanism"> -->
- <!--    <\!-- Process -\-> -->
- <!--    <div class="col-2"> -->
- <!--      <label class="control-label mb-0"> -->
- <!--        <i class="fa fa-cogs"></i> <b>Observed Process</b> -->
- <!--      </label> -->
- <!--    </div> -->
- <!--    <div class="col-5"> -->
- <!--      {{ form.select_process() }} -->
- <!--    </div> -->
- <!--  </div> -->
- <!--  <div class="form-row" title="The experimental method (e.g SHG, FRAP or wide field)"> -->
- <!--    <\!-- Method -\-> -->
- <!--    <div class="col-2"> -->
- <!--      <label class="control-label mb-0"> -->
- <!--        <i class="fa fa-tools"></i> <b>Method</b> -->
- <!--      </label> -->
- <!--    </div> -->
- <!--    <div class="col-5"> -->
- <!--      {{ form.select_method() }} -->
- <!--    </div> -->
- <!--  </div> -->
- <!--  <div class="form-row"> -->
- <!--    <hr/> -->
- <!--  </div> -->
- <!--  <div class="form-row"> -->
- <!--    <\!-- Gene mod -\-> -->
- <!--    <div class="col-2"> -->
- <!--      <label class="control-label mb-0" -->
- <!--             title="Gene and their modification"> -->
- <!--        <i class="fas fa-dna"></i><i class="fas fa-map-marker"></i> <b>Gene-Marker pairs</b> -->
- <!--      </label> -->
- <!--    </div> -->
- <!--  </div> -->
- <!--  <div class="form-row"> -->
- <!--    <div class="col-2"> -->
- <!--    </div> -->
- <!--    <div class="col-1"> -->
- <!--      <label class="control-label mb-0" -->
- <!--             title="Gene or protein"> -->
- <!--        <i class="fas fa-dna"></i> <b>Genes</b> -->
- <!--      </label> -->
- <!--    </div> -->
- <!--    </div> -->
- <!--    <div class="col-1"> -->
- <!--      <label -->
- <!--        class="control-label mb-0" -->
- <!--        title="Gene modifiers"> -->
- <!--        <i class="fas fa-map-marker"></i> <b>Markers</b> -->
- <!--      </label> -->
- <!--    </div> -->
- <!--  </div> -->
-
- <!-- {% for gene_mod_form in form.select_gene_mods.entries %} -->
- <!--  <div class="form-row"> -->
- <!--    <div class="col-2"> -->
- <!--    </div> -->
- <!--    <div class="col-2"> -->
- <!--        {{ gene_mod_form.select_gene() }} -->
- <!--    </div> -->
- <!--    <div class="col-2"> -->
- <!--        {{ gene_mod_form.select_marker() }} -->
- <!--    </div> -->
- <!--  </div> -->
- <!--  {% endfor %} -->
-
- <!--  <div class="form-row"> -->
- <!--    <div class="col-2"> -->
- <!--      <a title="add a gene modification entry"> -->
- <!--        {{ form.add_gene_mod() }} -->
- <!--      </a> -->
- <!--      <a title="remove last entry"> -->
- <!--        {{ form.remove_gene_mod() }} -->
- <!--      </a> -->
- <!--    </div> -->
- <!--  </div> -->
+  {% include "annotations/gene_mod_box.html" %}
   <div class="form-row">
     <hr/>
   </div>
