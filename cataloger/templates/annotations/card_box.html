@@ -29,20 +29,59 @@
       </label>
     </div>
     <div class="col-5">
-      {{ form.title() }}
+      {{ form.title(placeholder="My experiment") }}
     </div>
   </div>
   <div class="form-row" title="hashtags will be imported as tags">
     <!-- Comment -->
-    <div class="col-2">
+    <div class="col-6">
       <label class="control-label mb-0">
-        <i class="fa fa-comment"></i> <b>Description</b>
+        <h4><i class="fa fa-comment"></i> Experiment Description </h4>
       </label>
     </div>
   </div>
-  <div class="form-row" title="hashtags will be imported as tags">
+  <div class="form-row">
+    <hr/>
+  </div>
+  <div class="form-row" title="use #hashtags to register specific terms">
     <div class="col-6">
-      {{ form.comment(cols="80", rows="6") }}
+      <i class="fa fa-cogs"></i> <b>Observed process</b>
+    </div>
+  </div>
+  <div class="form-row" title="use #hashtags to register specific terms">
+    <div class="col-6">
+      {{
+        form.comment.observing(cols="80", rows="3",
+      placeholder="The process of interest in this experiment,\n
+      e.g. #chromosome segregation errors during #anaphase ")
+      }}
+    </div>
+  </div>
+  <div class="form-row" title="use #hashtags to register specific terms">
+    <div class="col-6">
+      <i class="fa fa-vial"></i><b>Experimental conditions</b>
+    </div>
+  </div>
+  <div class="form-row" title="use #hashtags to register specific terms">
+    <div class="col-6">
+      {{
+        form.comment.conditions(cols="80", rows="3",
+      placeholder="Treatement with drugs, fixation method, heatshock...\n
+      e.g #nocodazole at 0.5 µM ")
+      }}
+    </div>
+  </div>
+  <div class="form-row" title="use #hashtags to register specific terms">
+    <div class="col-6">
+      <i class="fa fa-sticky-note"></i><b>Additional information</b>
+    </div>
+  </div>
+  <div class="form-row" title="use #hashtags to register specific terms">
+    <div class="col-6">
+      {{
+        form.comment.additional(cols="80", rows="3",
+      placeholder="Anything that did not fit elsewhere")
+      }}
     </div>
   </div>
   <div class="form-row">
@@ -56,23 +95,26 @@
   {% include "annotations/selector_box.html" %}
   {% endif %}
   {% endfor %}
-
   <div class="form-row">
     <hr/>
+  </div>
+  <div class="form-row">
+    <div class="col-6">
+      <h4> <i class="fa fa-dna"></i><i class="fa fa-map-marker"></i>  Channels </h4>
+    </div>
   </div>
   {% include "annotations/gene_mod_box.html" %}
   <div class="form-row">
     <hr/>
   </div>
   <div class="form-row">
-    <div class="col-1">
-      <i class="fa fa-dna"></i><i class="fa fa-map-marker"></i>
-    </div>
-    <div class="col-1">
+    <div class="col-2">
       {{ form.add_gene_mod() }}
     </div>
-    <div class="col-1">
+    <div class="col-2">
+      {% if form.select_gene_mods %}
       {{ form.remove_gene_mod() }}
+      {% endif %}
     </div>
   </div>
   <div class="form-row">

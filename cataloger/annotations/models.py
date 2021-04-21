@@ -40,10 +40,10 @@ class Card(PkModel):
     project = relationship("Project", backref=__tablename__)
     organism_id = reference_col("organisms", nullable=False)
     organism = relationship("Organism", backref=__tablename__)
-    process_id = reference_col("processes", nullable=True)
-    process = relationship("Process", backref=__tablename__)
     sample_id = reference_col("samples", nullable=True)
     sample = relationship("Sample", backref=__tablename__)
+    process_id = reference_col("processes", nullable=True)
+    process = relationship("Process", backref=__tablename__)
     method_id = reference_col("methods", nullable=True)
     method = relationship("Method", backref=__tablename__)
     created_at = Column(db.DateTime, nullable=True, default=dt.datetime.utcnow)
@@ -57,16 +57,20 @@ class Card(PkModel):
             f"# {self.title}",
             f"# {self.created_at}",
             f"# by {username}",
-            f"# for project {self.project.name}",
+            f"# for project {self.project.label}",
             "# ",
             f"# {self.comment}",
             f"organism,{self.organism.label}",
             f"sample,{self.sample.label}",
             f"method,{self.method.label}",
-            f"process,{self.process.label}",
         ]
-        lines += [f"gene_mod_{i},{gm.label}" for i, gm in enumerate(self.gene_mods)]
+        lines += [f"channel_{i},{gm.label}" for i, gm in enumerate(self.gene_mods)]
         return "\n".join(lines)
+
+    @property
+    def tags(self):
+        _tags = [w.lstrip("#") for w in self.comment.split() if w.startswith("#")]
+        _tags.append([w.lstrip("#") for w in self.process.split() if w.startswith("#")])
 
     def as_dict(self):
 
@@ -75,23 +79,23 @@ class Card(PkModel):
             kv_pairs["organism"] = self.organism.label
         if self.sample:
             kv_pairs["sample"] = self.sample.label
-        if self.process:
-            kv_pairs["process"] = self.process.label
         if self.method:
             kv_pairs["method"] = self.method.label
+        if self.process:
+            kv_pairs["process"] = self.method.label
 
         kv_pairs.update(
-            {f"gene_mod_{i}": gm.label for i, gm in enumerate(self.gene_mods)}
+            {f"channel_{i}": gm.label for i, gm in enumerate(self.gene_mods)}
         )
-        tags = [w.lstrip("#") for w in self.comment.split() if w.startswith("#")]
+
         card_dict = {
             "title": self.title,
             "created": self.created_at,
-            "project": self.project.name,
+            "project": self.project.label,
             "user": self.user.username,
             "comment": self.comment,
             "kv_pairs": kv_pairs,
-            "tags": tags,
+            "tags": self.tags,
             "accessed": str(dt.datetime.utcnow()),
         }
         return card_dict
@@ -273,7 +277,7 @@ class Marker(Annotation):
 
     __tablename__ = "markers"
     __icon__ = "fa-map-marker"
-    __label__ = "Marker or deletion method"
+    __label__ = "Marker"
     user_id = reference_col("users", nullable=True)
     user = relationship("User", backref=__tablename__)
     group_id = reference_col("groups", nullable=True)
@@ -296,7 +300,7 @@ class Gene(Annotation):
 
     __tablename__ = "genes"
     __icon__ = "fa-dna"
-    __label__ = "Gene"
+    __label__ = "Target"
     user_id = reference_col("users", nullable=True)
     user = relationship("User", backref=__tablename__)
     ontology_id = reference_col("ontologies", nullable=True)
@@ -337,18 +341,24 @@ def get_gene_mod(gene_id, marker_id):
         return gene_mod
 
     gene = Gene.get_by_id(gene_id)
-    if not gene:
+    marker = Marker.get_by_id(marker_id)
+    if not (gene or marker):
         return None
 
-    marker = Marker.get_by_id(marker_id)
+    gene_label = gene.label if gene else ""
+    gene_id = gene.bioportal_id if gene else ""
+    marker_label = marker.label if marker else ""
+    marker_id = marker.bioportal_id if marker else ""
+    user_id = gene.user_id if gene else marker.user_id
+    group_id = gene.group_id if gene else marker.group_id
 
-    label = f"{gene.label}-{marker.label if marker else ''}"
-    bioportal_id = f"{gene.bioportal_id}-{marker.bioportal_id if marker else ''}"
+    label = f"{gene_label}-{marker_label}"
+    bioportal_id = f"{gene_id}-{marker_id}"
     gene_mod = GeneMod(
         label=label,
         bioportal_id=bioportal_id,
-        user_id=gene.user_id,
-        group_id=gene.group_id,
+        user_id=user_id,
+        group_id=group_id,
         marker_id=marker_id,
         gene_id=gene_id,
     )

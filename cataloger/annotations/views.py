@@ -225,6 +225,11 @@ def search_annotation(form, key, selector, card=None):
 
 def add_annotation(form, key, selector, card=None):
 
+    if not hasattr(current_app, "suggestions"):
+        if card:
+            return redirect(url_for("cards.edit_card", card_id=form.card_id))
+        return render_template("annotations/new_card.html", form=form)
+
     term = current_app.suggestions[selector.select_new.data]
     new = new_annotation(selector.kls, term)
 
