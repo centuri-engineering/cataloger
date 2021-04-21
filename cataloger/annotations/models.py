@@ -187,7 +187,7 @@ class Organism(Annotation):
     group = relationship("Group", backref=__tablename__)
 
     __icon__ = "fa-bug"
-    __label__ = "Experimental Model"
+    __label__ = "Organism"
 
 
 class Process(Annotation):
@@ -308,13 +308,12 @@ class Gene(Annotation):
 
 
 class GeneMod(Annotation):
-    """A marker / gene pair
+    """A protein / target pair
 
     Examples
     --------
     - alpha-tubulin GFP
-    - Myosin II RNAi
-    - CDC52 delta
+    - P53-Alexa488
     """
 
     __tablename__ = "gene_mods"
@@ -322,10 +321,10 @@ class GeneMod(Annotation):
     user = relationship("User", backref=__tablename__)
     group_id = reference_col("groups", nullable=True)
     group = relationship("Group", backref=__tablename__)
-    marker_id = reference_col("markers", nullable=False)
-    marker = relationship("Marker", backref=__tablename__)
     gene_id = reference_col("genes", nullable=False)
     gene = relationship("Gene", backref=__tablename__)
+    marker_id = reference_col("markers", nullable=True)
+    marker = relationship("Marker", backref=__tablename__)
 
 
 def get_gene_mod(gene_id, marker_id):
@@ -344,14 +343,12 @@ def get_gene_mod(gene_id, marker_id):
     marker = Marker.get_by_id(marker_id)
 
     label = f"{gene.label}-{marker.label if marker else ''}"
-    bioportal_id = (
-        f"{gene.bioportal_id}-{marker.bioportal_id if marker.bioportal_id else ''}"
-    )
+    bioportal_id = f"{gene.bioportal_id}-{marker.bioportal_id if marker else ''}"
     gene_mod = GeneMod(
         label=label,
         bioportal_id=bioportal_id,
-        user_id=gene.user.id,
-        group_id=gene.group.group_id,
+        user_id=gene.user_id,
+        group_id=gene.group_id,
         marker_id=marker_id,
         gene_id=gene_id,
     )

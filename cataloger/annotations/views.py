@@ -19,11 +19,7 @@ from flask import (
 
 from flask_login import login_required, current_user
 
-from cataloger.annotations.forms import (
-    NewCardForm,
-    EditCardForm,
-    NewProjectForm,
-)
+from cataloger.annotations.forms import NewCardForm, EditCardForm, ProjectForm
 
 from cataloger.annotations.models import (
     Card,
@@ -83,24 +79,34 @@ ontologies = {
 }
 
 
-@blueprint.route("/new-project/", methods=["GET", "POST"])
+def new_project(form):
+    match = Project.query.filter_by(
+        label=form.new.data, group_id=current_user.group_id
+    ).first()
+    if match:
+        flash(f"Project {match.label} already exists", "warning")
+        return match
+
+    project = Project(
+        label=form.new.data,
+        comment=form.comment.data,
+        user_id=current_user.id,
+        group_id=current_user.group_id,
+    )
+    flash(f"New project {project.label} created by user {current_user.id}", "success")
+    project.save()
+    form.select.choices.insert(0, (project.id, project.label))
+    return project
+
+
+@blueprint.route("/create-project/", methods=["GET", "POST"])
 @login_required
-def new_project():
-    form = NewProjectForm()
-    # if form.validate_on_submit():
+def create_project():
+    form = ProjectForm()
     if request.method == "POST":
-        project = Project(
-            label=form.name.data,
-            comment=form.comment.data,
-            user_id=current_user.id,
-            group_id=current_user.group_id,
-        )
-        flash(
-            f"New project {project.label} created by user {current_user.id}", "success"
-        )
-        project.save()
-        return redirect(url_for(".new_project"))
-    return render_template("annotations/new_project.html", form=form)
+        proj = new_project(form)
+        return redirect(url_for(".create_project"))
+    return render_template("annotations/create_project.html", form=form)
 
 
 def search_bioportal(search_text, **other_params):
@@ -170,15 +176,15 @@ def new_annotation(kls, term, card_id=None):
     return new
 
 
-def _format_label(term):
+def _format_label(term, show_definition=False, nwords=8):
     label = term["prefLabel"]
     ontology_id = term["links"]["ontology"]
     definition = term.get("definition")
     ontology = ontology_id.split("/")[-1]
-    if definition:
+    if show_definition and definition:
         split = definition[0].split()
-        if len(split) > 8:
-            short = " ".join(split[:8]).split(".")[0] + "..."
+        if len(split) > nwords:
+            short = " ".join(split[:nwords]).split(".")[0] + " ..."
         else:
             short = definition
         return f"{label}: {short} \t ({ontology})"
@@ -203,15 +209,16 @@ def cards(scope="group"):
 def search_annotation(form, key, selector, card=None):
 
     search_term = selector.search.data
-    flash(f"searching for {search_term}", "info")
+    log.info("searching for %s", search_term)
     suggestions, choices = annotation_choices(key, search_term=search_term)
     current_app.suggestions = suggestions
     form.update_choices(group_id=current_user.group_id)
-    form.reload_card()
+    if card:
+        form.reload_card()
     selector.select_new.choices = choices
     if card:
         return render_template(
-            "annotations/new_card.html", form=form, new=key, card_id=card.id
+            "annotations/edit_card.html", form=form, new=key, card_id=card.id
         )
     return render_template("annotations/new_card.html", form=form, new=key)
 
@@ -223,8 +230,22 @@ def add_annotation(form, key, selector, card=None):
 
     selector.choices.insert(0, (new.id, new.label))
     selector.data = new.id
+
+    if selector.kls in (Gene, Marker):
+        idx = key.split("_")[-1]
+        gene_id = form.selectors[f"gene_{idx}"].data
+        marker_id = form.selectors[f"marker_{idx}"].data
+        gene_mod = get_gene_mod(gene_id, marker_id)
+        if card:
+            card.gene_mods.append(gene_mod)
+            card.save()
+            return redirect(url_for("cards.edit_card", card_id=form.card_id))
+        return render_template("annotations/new_card.html", form=form)
+
     if card:
-        card.update(organism_id=new.id)
+        term_id = selector.kls.__name__.lower() + "_id"
+        setattr(card, term_id, new.id)
+        card.save()
         return redirect(url_for("cards.edit_card", card_id=form.card_id))
     return render_template("annotations/new_card.html", form=form)
 
@@ -243,10 +264,16 @@ def edit_card(card_id, search=None, new=None):
 
     card = Card.query.filter_by(id=card_id).first()
     if card.user_id != current_user.id:
-        flash("You can only edit your own cards, consider cloning instead")
+        flash("You can only edit your own cards, consider cloning instead", "warning")
         return redirect(url_for("user.cards"))
     form = EditCardForm(card_id=card_id)
     form.update_choices(group_id=current_user.group_id)
+
+    if form.select_project.new.data:
+        project = new_project(form.select_project)
+        card.update(project_id=project.id)
+        return render_template("annotations/edit_card.html", form=form, card_id=card_id)
+
     for key, selector in form.selectors.items():
         if selector.search.data:
             search = key
@@ -261,9 +288,16 @@ def edit_card(card_id, search=None, new=None):
     if form.remove_gene_mod.data and len(form.select_gene_mods):
         form.select_gene_mods.pop_entry()
         return render_template("annotations/edit_card.html", form=form, card_id=card_id)
+
+    if form.select_project.add.data:
+        log.info("adding new project")
+        return render_template(
+            "annotations/edit_card.html", form=form, new="project", card_id=card_id
+        )
+
     for key, selector in form.selectors.items():
         if selector.add.data:
-            flash(f"now searching for new {key}", "warning")
+            log.info("searching for new %s", key)
             return render_template(
                 "annotations/edit_card.html", form=form, search=key, card_id=card_id
             )
@@ -288,6 +322,10 @@ def new_card():
     form = NewCardForm()
     form.update_choices(group_id=current_user.group_id)
 
+    if form.select_project.new.data:
+        new_project(form.select_project)
+        return render_template("annotations/new_card.html", form=form)
+
     for key, selector in form.selectors.items():
         if selector.search.data:
             search = key
@@ -303,14 +341,17 @@ def new_card():
         form.select_gene_mods.pop_entry()
         return render_template("annotations/new_card.html", form=form)
 
-    if request.method == "POST":  #  form.validate_on_submit():
-        card = form.create_card(current_user)
-        return redirect(url_for("user.cards", card_id=card.id))
+    if form.select_project.add.data:
+        return render_template("annotations/new_card.html", form=form, new="project")
 
     for key, selector in form.selectors.items():
         if selector.add.data:
-            flash(f"now searching for new {key}", "warning")
+            log.info("now searching for new %s", key)
             return render_template("annotations/new_card.html", form=form, search=key)
+
+    if request.method == "POST":  #  form.validate_on_submit():
+        card = form.create_card(current_user)
+        return redirect(url_for("user.cards", card_id=card.id))
 
     return render_template("annotations/new_card.html", form=form)
 
@@ -369,8 +410,7 @@ def clone_card(card_id):
         sample_id=card.sample_id,
         method_id=card.method_id,
         comment=card.comment,
-        markers=card.markers,
-        genes=card.genes,
+        gene_mods=card.gene_mods,
     )
     cloned.save()
     flash(f"Card {card.title} cloned by user {current_user.id}", "success")

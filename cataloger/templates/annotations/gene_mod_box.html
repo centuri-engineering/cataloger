@@ -1,86 +1,92 @@
-  {% for entry in form.select_gene_mods.entries %}
+{% for entry in form.select_gene_mods.entries %}
 <div class="form-row">
-    <div class="col-4">
-      <label class="control-label mb-0" title="{{ entry.select_gene.kls.help() }}">
-        <i class="fa {{ entry.select_gene.kls.__icon__ }}"></i> <b>{{ entry.select_gene.kls.__label__ }}</b>
-      </label>
-    </div>
-    <div class="col-4">
-      <label class="control-label mb-0" title="{{ entry.select_marker.kls.help() }}">
-        <i class="fa {{ entry.select_marker.kls.__icon__ }}"></i> <b>{{ entry.select_marker.kls.__label__ }}</b>
-      </label>
-    </div>
+  <hr/>
+</div>
+<div class="form-row">
+  <div class="col-4">
+    <label class="control-label mb-0" title="{{ entry.select_gene.kls.help() }}">
+      <i class="fa {{ entry.select_gene.kls.__icon__ }}"></i> <b>{{ entry.select_gene.kls.__label__ }}</b>
+    </label>
   </div>
-  <div class="form-row">
-    <div class="col-3">
-      {{ entry.select_gene.select() }}
-    </div>
-    <div class="col-3">
-      {{ entry.select_gene.add() }}
-    </div>
-    <div class="col-1">
-      {{ entry.select_marker.select() }}
-    </div>
-    <div class="col-1">
-      {{ entry.select_marker.add() }}
-    </div>
+  <div class="col-4">
+    <label class="control-label mb-0" title="{{ entry.select_marker.kls.help() }}">
+      <i class="fa {{ entry.select_marker.kls.__icon__ }}"></i> <b>{{ entry.select_marker.kls.__label__ }}</b>
+    </label>
   </div>
-  <div class="form-row">
-    <div class="col-3">
-      {% if search == "gene_{}".format(loop.index) %}
-        {{ entry.select_gene.search() }}
-      {% elif new == "gene_{}".format(loop.index)  %}
-        {{ entry.select_gene.select_new() }}
-      {% endif %}
-    </div>
-    <div class="col-1">
-      {% if search == "gene_{}".format(loop.index) %}
-      <a href={{ url_for("cards.edit_card", card_id=form.card_id, search=search) }}>
+</div>
+<div class="form-row">
+  <hr/>
+</div>
+<div class="form-row">
+  <div class="col-3">
+    {{ entry.select_gene.select() }}
+  </div>
+  <div class="col-1">
+    {{ entry.select_gene.add() }}
+  </div>
+  <div class="col-3">
+    {{ entry.select_marker.select() }}
+  </div>
+  <div class="col-1">
+    {{ entry.select_marker.add() }}
+  </div>
+</div>
+<div class="form-row">
+  <div class="col-3">
+    {% if search == "gene_{}".format(loop.index - 1) %}
+    {{ entry.select_gene.search() }}
+    {% elif new == "gene_{}".format(loop.index - 1)  %}
+    {{ entry.select_gene.select_new() }}
+    {% endif %}
+  </div>
+  <div class="col-1">
+    {% if search == "gene_{}".format(loop.index - 1) %}
+    <a href={{ url_for("cards.edit_card", card_id=form.card_id, search=search) }}>
       <button
         type="submit"
         class="btn btn-light"
         style="width: 4rem;"
         title="search">
         <i class="fa fa-search"></i></button>
-      </a>
-      {% elif new == "gene_{}".format(loop.index) %}
-      <a href={{ url_for("cards.edit_card", card_id=form.card_id, new=new) }}>
+    </a>
+    {% elif new == "gene_{}".format(loop.index - 1) %}
+    <a href={{ url_for("cards.edit_card", card_id=form.card_id, new=new) }}>
       <button
         type="submit"
         class="btn btn-light"
         style="width: 4rem;"
         title="add term">
         <i class="fa fa-check"></i></button>
-      </a>
-      {% endif %}
-    </div>
-    <div class="col-3">
-      {% if search == "marker_{}".format(loop.index) %}
-        {{ entry.select_marker.search() }}
-      {% elif new == "marker_{}".format(loop.index)  %}
-        {{ entry.select_marker.select_new() }}
-      {% endif %}
-    </div>
-    <div class="col-2">
-      {% if search == "marker_{}".format(loop.index) %}
-      <a href={{ url_for("cards.edit_card", card_id=form.card_id, search=search) }}>
+    </a>
+    {% endif %}
+  </div>
+  <div class="col-3">
+    {% if search == "marker_{}".format(loop.index - 1) %}
+    {{ entry.select_marker.search() }}
+    {% elif new == "marker_{}".format(loop.index - 1)  %}
+    {{ entry.select_marker.select_new() }}
+    {% endif %}
+  </div>
+  <div class="col-2">
+    {% if search == "marker_{}".format(loop.index - 1) %}
+    <a href={{ url_for("cards.edit_card", card_id=form.card_id, search=search) }}>
       <button
         type="submit"
         class="btn btn-light"
         style="width: 4rem;"
         title="search">
         <i class="fa fa-search"></i></button>
-      </a>
-      {% elif new == "marker_{}".format(loop.index) %}
-      <a href={{ url_for("cards.edit_card", card_id=form.card_id, new=new) }}>
+    </a>
+    {% elif new == "marker_{}".format(loop.index - 1) %}
+    <a href={{ url_for("cards.edit_card", card_id=form.card_id, new=new) }}>
       <button
         type="submit"
         class="btn btn-light"
         style="width: 4rem;"
         title="add term">
         <i class="fa fa-check"></i></button>
-      </a>
-      {% endif %}
-    </div>
+    </a>
+    {% endif %}
   </div>
-  {% endfor %}
+</div>
+{% endfor %}

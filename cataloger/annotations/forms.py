@@ -28,10 +28,11 @@ from cataloger.annotations.models import (
 log = logging.getLogger(__name__)
 
 
-class NewProjectForm(FlaskForm):
-    name = StringField("Project name")
+class ProjectForm(FlaskForm):
+    select = SelectField("Select Project")
     comment = TextAreaField("Comment")
-    submit = SubmitField("save")
+    add = SubmitField("+")
+    new = StringField("Name of the new project")
 
 
 class MarkerForm(FlaskForm):
@@ -58,19 +59,19 @@ class AnnotationForm(FlaskForm):
     select_new = SelectField("Choose the best match")
 
 
-class AnnotationFields(FormField):
-    def __init__(self, kls=None, *args, **kwargs):
-        super().__init__(AnnotationForm, *args, **kwargs)
-        self.kls = kls
-
+class SelectAddFields(FormField):
     @property
     def choices(self):
-        log.info("Accessing choices property ")
+        log.debug(
+            "Accessing choices property for AnnotationField of %s", self.kls.__name__
+        )
         return self.select.choices
 
     @choices.setter
     def choices(self, choices):
-        log.info("Setting choices property ")
+        log.debug(
+            "Setting choices property  for AnnotationField of %s", self.kls.__name__
+        )
         self.select.choices = choices
 
     @property
@@ -80,6 +81,18 @@ class AnnotationFields(FormField):
     @data.setter
     def data(self, data):
         self.select.data = data
+
+
+class AnnotationFields(SelectAddFields):
+    def __init__(self, kls=None, *args, **kwargs):
+        super().__init__(AnnotationForm, *args, **kwargs)
+        self.kls = kls
+
+
+class ProjectFields(SelectAddFields):
+    def __init__(self, *args, **kwargs):
+        super().__init__(ProjectForm, *args, **kwargs)
+        self.kls = Project
 
 
 class GeneModForm(FlaskForm):
@@ -101,7 +114,7 @@ class NewCardForm(FlaskForm):
     title = StringField("Card title")
     comment = TextAreaField("Comment", widget=TextArea())
 
-    select_project = SelectField("Project")
+    select_project = ProjectFields()
 
     select_organism = AnnotationFields(Organism)
     select_process = AnnotationFields(Process)
@@ -109,8 +122,8 @@ class NewCardForm(FlaskForm):
     select_sample = AnnotationFields(Sample)
 
     select_gene_mods = FieldList(FormField(GeneModForm))
-    add_gene_mod = SubmitField("+")
-    remove_gene_mod = SubmitField("-")
+    add_gene_mod = SubmitField("add gene")
+    remove_gene_mod = SubmitField(" remove gene")
 
     save = SubmitField("save")
 
@@ -123,8 +136,6 @@ class NewCardForm(FlaskForm):
             "processes": self.select_process,
             "methods": self.select_method,
         }
-        if not self.select_gene_mods:
-            self.select_gene_mods.append_entry()
 
     @property
     def selectors(self):
@@ -223,8 +234,11 @@ class EditCardForm(NewCardForm):
 
         for gene_mod in card.gene_mods:
             entry = self.select_gene_mods.append_entry()
-            entry.select_marker.choices.insert(
-                0, (gene_mod.marker_id, gene_mod.marker.label)
-            )
+            if gene_mod.marker:
+                entry.select_marker.choices.insert(
+                    0, (gene_mod.marker_id, gene_mod.marker.label)
+                )
+            else:
+                entry.select_marker.choices.insert(0, (0, "-"))
             entry.select_gene.choices.insert(0, (gene_mod.gene_id, gene_mod.gene.label))
         return card

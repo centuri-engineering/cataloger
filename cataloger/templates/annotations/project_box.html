@@ -1,0 +1,38 @@
+<div class="form-row", title="The project for this experiment">
+  <div class="col-2">
+      <label class="control-label mb-0">
+        <i class="fa fa-project-diagram"></i> <b>Project</b>
+      </label>
+  </div>
+  <div class="col-3">
+    {{ form.select_project.select() }}
+  </div>
+  <div class="col-1">
+    {{ form.select_project.add() }}
+  </div>
+  {% if new == "project"  %}
+  <div class="col-2">
+    {{ form.select_project.new() }}
+  </div>
+  <div class="col-2">
+    <a href={{ url_for("cards.edit_card", card_id=form.card_id, new="project") }}>
+      <button
+        type="submit"
+        class="btn btn-light"
+        style="width: 4rem;"
+        title="add term">
+        <i class="fa fa-check"></i></button>
+    </a>
+    {% endif %}
+  </div>
+</div>
+{% if new == "project"  %}
+<div class="form-row">
+  <div class="col-5">
+
+  </div>
+  <div class="col-3">
+    {{ form.select_project.comment()}}
+  </div>
+</div>
+{% endif %}

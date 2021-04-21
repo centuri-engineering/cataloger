@@ -48,22 +48,8 @@
   <div class="form-row">
     <hr/>
   </div>
-  <div class="form-row" title="The project for this experiment">
-    <!-- Project -->
-    <div class="col-2">
-      <label class="control-label mb-0">
-        <i class="fa fa-project-diagram"></i> <b>Project</b>
-      </label>
-    </div>
-    <div class="col-1">
-      <a href={{ url_for('cards.new_project', cls="projects") }}>
-          <i class="fa fa-plus"></i>
-      </a>
-    </div>
-    <div class="col-5">
-      {{ form.select_project() }}
-    </div>
-  </div>
+
+  {% include "annotations/project_box.html" %}
 
   {% for key, selector in form.selectors.items() %}
   {% if not (key.startswith("gene") or key.startswith("marker")) %}
@@ -75,6 +61,20 @@
     <hr/>
   </div>
   {% include "annotations/gene_mod_box.html" %}
+  <div class="form-row">
+    <hr/>
+  </div>
+  <div class="form-row">
+    <div class="col-1">
+      <i class="fa fa-dna"></i><i class="fa fa-map-marker"></i>
+    </div>
+    <div class="col-1">
+      {{ form.add_gene_mod() }}
+    </div>
+    <div class="col-1">
+      {{ form.remove_gene_mod() }}
+    </div>
+  </div>
   <div class="form-row">
     <hr/>
   </div>
