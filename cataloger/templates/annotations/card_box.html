@@ -5,13 +5,13 @@
   <div class="container-fluid py-6">
     <h3 class="display-4 fw-bold">Card edition form</h3>
     <p class="col-md-5 fs-4">
-      Use the various menus to define you experiment.
-      If you do not
-      find a suitable entry, hit the <i class="fa fa-plus"></i> icon
-      to search for a new term.
+      Use the various menus to define you experiment.  If you do not
+      find a suitable entry, hit the <b>+</b> button on the right to
+      search for a new term.
     </p>
     <p class="col-md-5 fs-4">
-      You can put <b>#hashtags</b> in the <i class="fa fa-comment"></i>  section.
+      You can put <b>#hashtags</b> in the Experiment description sections, they will be used as tags in the
+      database.
     </p>
   </div>
 </div>
@@ -37,11 +37,24 @@
 
   {% include "annotations/project_box.html" %}
 
+  <div class="form-row">
+    <div class="col-6", style="margin-top: 2rem; margin-bottom: 1rem;">
+      <label class="control-label mb-0">
+        <h4> Categories </h4>
+      </label>
+    </div>
+  </div>
+  {% for key, selector in form.selectors.items() %}
+  {% if not (key.startswith("gene") or key.startswith("marker")) %}
+  {% include "annotations/selector_box.html" %}
+  {% endif %}
+  {% endfor %}
+
   <div class="form-row" title="hashtags will be imported as tags">
     <!-- Comment -->
     <div class="col-6", style="margin-top: 2rem;">
       <label class="control-label mb-0">
-        <h4><i class="fa fa-comment"></i> Experiment Description </h4>
+        <h4> Experiment Description </h4>
       </label>
     </div>
   </div>
@@ -90,23 +103,11 @@
     </div>
   </div>
   <div class="form-row">
-    <div class="col-6", style="margin-top: 2rem; margin-bottom: 1rem;">
-      <label class="control-label mb-0">
-        <h4><i class="fa fa-sitemap"></i> Categories </h4>
-      </label>
-    </div>
-  </div>
-  {% for key, selector in form.selectors.items() %}
-  {% if not (key.startswith("gene") or key.startswith("marker")) %}
-  {% include "annotations/selector_box.html" %}
-  {% endif %}
-  {% endfor %}
-  <div class="form-row">
     <hr/>
   </div>
   <div class="form-row">
-    <div class="col-5">
-      <h4> <i class="fa fa-dna"></i><i class="fa fa-map-marker"></i>  Channels </h4>
+    <div class="col-3">
+      <h4> Channels </h4>
     </div>
     <div class="col-1">
       {% if not form.select_gene_mods %}
@@ -115,12 +116,12 @@
     </div>
   </div>
   {% include "annotations/gene_mod_box.html" %}
-  <div class="form-row">
+  <div class="form-row" style="margin-top: 1rem">
     {% if form.select_gene_mods %}
-    <div class="col-2">
+    <div class="col-1">
       {{ form.add_gene_mod() }}
     </div>
-    <div class="col-2">
+    <div class="col-1">
       {{ form.remove_gene_mod() }}
     </div>
       {% endif %}
@@ -132,7 +133,7 @@
       <a href={{ url_for("user.cards") }}>
         <button
           type="submit"
-          class="btn btn-light"
+          class="btn btn-info"
           style="width: 8rem;"
           title="Save">
           <i class="fa fa-save"></i></button>

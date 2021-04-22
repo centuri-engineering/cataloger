@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 54e9d82f2ebf
+Revision ID: f362ba70fb60
 Revises: 
-Create Date: 2021-04-21 15:11:25.737271
+Create Date: 2021-04-22 15:14:18.596558
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '54e9d82f2ebf'
+revision = 'f362ba70fb60'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -29,6 +29,13 @@ def upgrade():
     sa.Column('acronym', sa.String(length=30), nullable=False),
     sa.Column('name', sa.String(length=128), nullable=False),
     sa.Column('bioportal_id', sa.String(length=128), nullable=False),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('tags',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('label', sa.String(length=128), nullable=False),
+    sa.Column('group_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['group_id'], ['groups.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('users',
@@ -182,7 +189,7 @@ def upgrade():
     sa.Column('bioportal_id', sa.String(length=128), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=True),
     sa.Column('group_id', sa.Integer(), nullable=True),
-    sa.Column('gene_id', sa.Integer(), nullable=False),
+    sa.Column('gene_id', sa.Integer(), nullable=True),
     sa.Column('marker_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['gene_id'], ['genes.id'], ),
     sa.ForeignKeyConstraint(['group_id'], ['groups.id'], ),
@@ -213,6 +220,7 @@ def downgrade():
     op.drop_table('projects')
     op.drop_table('organisms')
     op.drop_table('users')
+    op.drop_table('tags')
     op.drop_table('ontologies')
     op.drop_table('groups')
     # ### end Alembic commands ###

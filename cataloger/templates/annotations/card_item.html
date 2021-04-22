@@ -1,25 +1,34 @@
 {% block content %}
 <div class="card shadow-sm" id="{{ card.id }}">
   <div class="card-header">
-    <h4 class="my-0 font-weight-normal"> {{ card.project.label }} &mdash; {{ card.id }} </h4>
+    <h3 class="my-0 font-weight-normal"> {{ card.project.label }}</h3>
+    {% for tag in card.tags %}
+      <span class="badge rounded-pill bg-info" style="font-size: 1rem;">{{ tag }}</span>
+    {% endfor %}
   </div>
   <div class="card-body">
     <h1 class="card-title pricing-card-title"> {{ card.title }} </h1>
     <ul class="list-group list-group-flush mt-3 mb-4 text-left">
       <li class="list-group-item"><i class="fa fa-bug"></i> {{ card.organism.label }}
       </li>
+      {% if card.sample %}
       <li class="list-group-item"><i class="fa fa-flask"></i> {{ card.sample.label }}
       </li>
+      {% endif %}
+      {% if card.process %}
       <li class="list-group-item"><i class="fa fa-cogs"></i> {{ card.process.label }}
       </li>
+      {% endif %}
+      {% if card.method %}
       <li class="list-group-item"><i class="fa fa-tools"></i> {{ card.method.label }}
       </li>
+      {% endif %}
       {% if card.comment %}
-      <li class="list-group-item"><i class="fa fa-comment"></i> {{ card.html_comment | safe }}
+      <li class="list-group-item">{{ card.html_comment | safe }}
       </li>
       {% endif %}
       {% for gene_mod in card.gene_mods %}
-      <li class="list-group-item"><i class="fas fa-dna"></i><i class="fas fa-map-marker"></i> {{ gene_mod.label }}
+      <li class="list-group-item"><i class="fas fa-microscope"></i> {{ loop.index }} {{ gene_mod.label }}
       </li>
       {% endfor %}
     </ul>

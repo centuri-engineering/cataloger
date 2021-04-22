@@ -1,10 +1,10 @@
-  <div class="form-row">
-    <div class="col-2">
+  <div class="form-row" >
+    <div class="col-1">
       <label class="control-label mb-0" title="{{ selector.kls.help() }}">
         <i class="fa {{ selector.kls.__icon__ }}"></i> <b>{{ selector.kls.__label__ }}</b>
       </label>
     </div>
-    <div class="col-4">
+    <div class="col-3">
       {% if key == search %}
         {{ selector.search() }}
       {% elif key == new  %}

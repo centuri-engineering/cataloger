@@ -73,9 +73,9 @@ ontologies = {
     classes["organisms"]: ("NCBITAXON",),
     classes["samples"]: ("FB-BT", "GO", "MESH", "CLO", "NCIT"),
     classes["processes"]: ("GO", "MESH", "NCIT"),
-    classes["methods"]: ("FBbi", "EDAM-BIOIMAGING"),
-    classes["genes"]: ("PR", "FBbi", "EDAM-BIOIMAGING"),
-    classes["markers"]: ("FBbi", "EDAM-BIOIMAGING"),
+    classes["methods"]: ("FBbi", "EDAM-BIOIMAGING", "MESH", "NCIT"),
+    classes["genes"]: ("FBbi", "EDAM-BIOIMAGING", "GO"),
+    classes["markers"]: ("FBbi", "GO", "EDAM-BIOIMAGING", "PR"),
 }
 
 

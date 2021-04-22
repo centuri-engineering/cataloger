@@ -23,6 +23,7 @@ from cataloger.annotations.models import (
     Method,
     Project,
     get_gene_mod,
+    Tag,
 )
 
 log = logging.getLogger(__name__)
@@ -31,39 +32,35 @@ log = logging.getLogger(__name__)
 class ProjectForm(FlaskForm):
     select = SelectField("Select Project")
     comment = TextAreaField("Comment", default="Describe your experiment")
-    add = SubmitField("+")
+    add = SubmitField("+", render_kw={"class": "btn btn-light"})
     new = StringField("Name of the new project")
-
-
-class MarkerForm(FlaskForm):
-    select_marker = SelectField("Marker")
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.select_marker.choices = [(p.id, p.label) for p in Marker.query.all()]
-
-
-class GeneForm(FlaskForm):
-    select_gene = SelectField("Gene")
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.select_gene.choices = [(p.id, p.label) for p in Gene.query.all()]
 
 
 class AnnotationForm(FlaskForm):
 
-    select = SelectField("Select the best match", choices=[])
-    add = SubmitField("+")
+    select = SelectField(
+        "Select the best match",
+        render_kw={
+            "class": "form-select",
+            "style": "text-overflow: ellipsis; width: 100% !important",
+        },
+    )
+    add = SubmitField("+", render_kw={"class": "btn btn-light"})
     search = StringField("Search")
-    select_new = SelectField("Choose the best match")
+    select_new = SelectField(
+        "Choose the best match",
+        render_kw={
+            "class": "form-select",
+            "style": "text-overflow: ellipsis; width: 100% !important",
+        },
+    )
 
 
 class CommentForm(FlaskForm):
 
     observing = TextAreaField("Observed Process", widget=TextArea())
     conditions = TextAreaField("Experimental Conditions", widget=TextArea())
-    additional = TextAreaField("Comment", widget=TextArea())
+    additional = TextAreaField("Additional Informations", widget=TextArea())
 
 
 class CommentFields(FormField):
@@ -75,11 +72,11 @@ class CommentFields(FormField):
         lines = []
 
         if self.observing.data:
-            lines.extend(["Observed Observing :", "\n", self.observing.data, "\n"])
+            lines.extend(["Observed Process :", "\n", self.observing.data, "\n"])
         if self.conditions.data:
-            lines.extend(["Experimental conditions :", self.conditions.data, "\n"])
+            lines.extend(["Experimental Conditions :", self.conditions.data, "\n"])
         if self.additional.data:
-            lines.extend(["Additional information", self.additional.data, "\n"])
+            lines.extend(["Additional Information :", self.additional.data, "\n"])
         return "\n".join(lines)
 
     @property
@@ -149,11 +146,13 @@ class NewCardForm(FlaskForm):
     select_sample = AnnotationFields(Sample)
 
     select_gene_mods = FieldList(FormField(GeneModForm))
-    add_gene_mod = SubmitField("add a channel")
-    remove_gene_mod = SubmitField("remove last channel")
+    add_gene_mod = SubmitField("add a channel", render_kw={"class": "btn btn-info"})
+    remove_gene_mod = SubmitField(
+        "remove last channel", render_kw={"class": "btn btn-secondary"}
+    )
 
-    save = SubmitField("save")
-    cancel = SubmitField("Cancel")
+    save = SubmitField("save", render_kw={"class": "btn btn-light"})
+    cancel = SubmitField("Cancel", render_kw={"class": "btn btn-light"})
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -184,11 +183,13 @@ class NewCardForm(FlaskForm):
 
     def create_card(self, current_user):
 
-        gene_mods = [
-            get_gene_mod(gm.select_gene.data, gm.select_marker.data)
-            for gm in self.select_gene_mods.entries
-            if gm
-        ]
+        gene_mods = []
+        for entry in self.select_gene_mods.entries:
+            gm = get_gene_mod(entry.select_gene.data, entry.select_marker.data)
+            if gm:
+                gene_mods.append(gm)
+
+        gene_mods = [gm for gm in gene_mods if gm]
         card = Card(
             user_id=current_user.id,
             group_id=current_user.group_id,
@@ -214,11 +215,11 @@ class EditCardForm(NewCardForm):
         if card_id is None:
             card_id = self.card_id
         card = Card.query.filter_by(id=card_id).first()
-        gene_mods = [
-            get_gene_mod(gm.select_gene.data, gm.select_marker.data)
-            for gm in self.select_gene_mods.entries
-            if gm
-        ]
+        gene_mods = []
+        for entry in self.select_gene_mods.entries:
+            gm = get_gene_mod(entry.select_gene.data, entry.select_marker.data)
+            if gm:
+                gene_mods.append(gm)
 
         card.update(
             title=self.title.data,
@@ -231,6 +232,11 @@ class EditCardForm(NewCardForm):
         )
         card.save()
         log.info("saved card %d", card.id)
+        existing_tags = {t.label for t in Tag.query.filter_by(group_id=card.group_id)}
+        new_tags = card.tags - existing_tags
+        for tag in new_tags:
+            Tag(label=tag, group_id=card.group_id).save()
+            log.info("saved tag  %s", tag)
         return card.id
 
     def reload_card(self, card_id=None):
@@ -247,13 +253,15 @@ class EditCardForm(NewCardForm):
             in_conditions = False
 
             for line in card.comment.split("\n"):
-                if line.startswith("Experimental conditions"):
-                    in_observing = True
-                    in_conditions = False
-                elif line.startswith("Observed process"):
+                if not line:
+                    continue
+                if line.startswith("Experimental Conditions"):
                     in_observing = False
                     in_conditions = True
-                elif line.startswith("Additional information"):
+                elif line.startswith("Observed Process"):
+                    in_observing = True
+                    in_conditions = False
+                elif line.startswith("Additional Information"):
                     in_observing = False
                     in_conditions = False
                 elif in_observing:
@@ -281,7 +289,7 @@ class EditCardForm(NewCardForm):
         if card.sample:
             self.select_sample.choices.insert(0, (card.sample.id, card.sample.label))
 
-        if card.observing:
+        if card.process:
             pass
 
         if card.method:
@@ -289,11 +297,17 @@ class EditCardForm(NewCardForm):
 
         for gene_mod in card.gene_mods:
             entry = self.select_gene_mods.append_entry()
-            if gene_mod.marker:
+            if gene_mod.gene_id:
+                entry.select_gene.choices.insert(
+                    0, (gene_mod.gene_id, gene_mod.gene.label)
+                )
+            else:
+                entry.select_gene.choices.insert(0, (0, "-"))
+            if gene_mod.marker_id:
                 entry.select_marker.choices.insert(
                     0, (gene_mod.marker_id, gene_mod.marker.label)
                 )
             else:
                 entry.select_marker.choices.insert(0, (0, "-"))
-            entry.select_gene.choices.insert(0, (gene_mod.gene_id, gene_mod.gene.label))
+
         return card

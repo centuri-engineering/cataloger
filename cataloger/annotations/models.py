@@ -2,6 +2,8 @@
 """User models."""
 import datetime as dt
 import toml
+import logging
+
 
 from cataloger.database import (
     Column,
@@ -11,6 +13,7 @@ from cataloger.database import (
     relationship,
 )
 
+log = logging.getLogger(__name__)
 
 """Many to many tables
 """
@@ -21,6 +24,15 @@ gene_mod_card = db.Table(
     Column("gene_mod_id", db.Integer, db.ForeignKey("gene_mods.id")),
     Column("card_id", db.Integer, db.ForeignKey("cards.id")),
 )
+
+
+class Tag(PkModel):
+    """A single word tag"""
+
+    __tablename__ = "tags"
+    label = Column(db.String(128), nullable=False)
+    group_id = reference_col("groups", nullable=True)
+    group = relationship("Group", backref=__tablename__)
 
 
 class Card(PkModel):
@@ -70,7 +82,7 @@ class Card(PkModel):
     @property
     def tags(self):
         _tags = [w.lstrip("#") for w in self.comment.split() if w.startswith("#")]
-        _tags.append([w.lstrip("#") for w in self.process.split() if w.startswith("#")])
+        return set(_tags)
 
     def as_dict(self):
 
@@ -125,8 +137,21 @@ class Card(PkModel):
     @property
     def html_comment(self):
 
-        words = self.comment.split()
-        html = " ".join([f"<b>{w}</b>" if w.startswith("#") else w for w in words])
+        lines = []
+        for line in self.comment.split("\n"):
+            if (
+                line.startswith("Observed Process")
+                or line.startswith("Experimental Conditions")
+                or line.startswith("Additional Information")
+            ):
+                lines.append(f"""<h5 style="margin-top: 1rem;"> {line} </h5>""")
+            else:
+                line = " ".join(
+                    [f"<b>{w}</b>" if w.startswith("#") else w for w in line.split(" ")]
+                )
+                lines.append(line)
+
+        html = "\n".join(lines)
         return html
 
 
@@ -171,14 +196,13 @@ class Annotation(PkModel):
 
 
 class Organism(Annotation):
-    """An organism in the taxonomy sense, or an experimental model
+    """An organism in the taxonomy sense
 
 
     Examples
     --------
     - fruit fly (Drosophila melanogaster)
     - mouse (Mus musculus)
-    - Hela Cells
     - Xaenopus Laevis egg extract
     """
 
@@ -289,7 +313,7 @@ class Marker(Annotation):
 
 
 class Gene(Annotation):
-    """A gene (or its corresponding protein)
+    """A target protein, primary antibody or other biochemical element
 
     Examples
     --------
@@ -325,7 +349,7 @@ class GeneMod(Annotation):
     user = relationship("User", backref=__tablename__)
     group_id = reference_col("groups", nullable=True)
     group = relationship("Group", backref=__tablename__)
-    gene_id = reference_col("genes", nullable=False)
+    gene_id = reference_col("genes", nullable=True)
     gene = relationship("Gene", backref=__tablename__)
     marker_id = reference_col("markers", nullable=True)
     marker = relationship("Marker", backref=__tablename__)
@@ -338,6 +362,7 @@ def get_gene_mod(gene_id, marker_id):
 
     gene_mod = GeneMod.query.filter_by(gene_id=gene_id, marker_id=marker_id).first()
     if gene_mod:
+        log.info("Found gene_mod for gene %s and marker %s", gene_id, marker_id)
         return gene_mod
 
     gene = Gene.get_by_id(gene_id)
@@ -359,8 +384,11 @@ def get_gene_mod(gene_id, marker_id):
         bioportal_id=bioportal_id,
         user_id=user_id,
         group_id=group_id,
-        marker_id=marker_id,
-        gene_id=gene_id,
     )
+    if gene:
+        gene_mod.update(gene=gene, gene_id=gene_id, commit=False)
+    if marker:
+        gene_mod.update(marker=marker, marker_id=marker_id, commit=False)
+
     gene_mod.save()
     return gene_mod
