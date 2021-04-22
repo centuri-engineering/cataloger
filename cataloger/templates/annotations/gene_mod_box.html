@@ -44,26 +44,12 @@
     <b> Channel {{ loop.index }} </b>
   </div>
   <div class="col-3">
-    {{ entry.select_gene.select() }}
-  </div>
-  <div class="col-1">
-    {{ entry.select_gene.add() }}
-  </div>
-  <div class="col-3">
-    {{ entry.select_marker.select() }}
-  </div>
-  <div class="col-1">
-    {{ entry.select_marker.add() }}
-  </div>
-</div>
-<div class="form-row">
-  <div class="col-1">
-  </div>
-  <div class="col-3">
     {% if search == "gene_{}".format(loop.index - 1) %}
-    {{ entry.select_gene.search() }}
+      {{ entry.select_gene.search() }}
     {% elif new == "gene_{}".format(loop.index - 1)  %}
-    {{ entry.select_gene.select_new() }}
+      {{ entry.select_gene.select_new() }}
+    {% else %}
+      {{ entry.select_gene.select() }}
     {% endif %}
   </div>
   <div class="col-1">
@@ -85,16 +71,20 @@
         title="add term">
         <i class="fa fa-check"></i></button>
     </a>
+    {% else %}
+      {{ entry.select_gene.add() }}
     {% endif %}
   </div>
   <div class="col-3">
     {% if search == "marker_{}".format(loop.index - 1) %}
-    {{ entry.select_marker.search() }}
+      {{ entry.select_marker.search() }}
     {% elif new == "marker_{}".format(loop.index - 1)  %}
-    {{ entry.select_marker.select_new() }}
+      {{ entry.select_marker.select_new() }}
+    {% else %}
+      {{ entry.select_marker.select() }}
     {% endif %}
   </div>
-  <div class="col-2">
+  <div class="col-1">
     {% if search == "marker_{}".format(loop.index - 1) %}
     <a href={{ url_for("cards.edit_card", card_id=form.card_id, search=search) }}>
       <button
@@ -113,6 +103,13 @@
         title="add term">
         <i class="fa fa-check"></i></button>
     </a>
+    {% else %}
+      {{ entry.select_marker.add() }}
+    {% endif %}
+  </div>
+  <div class="col-1">
+    {% if new and new.endswith("{}".format(loop.index - 1)) %}
+     {{ form.cancel }}
     {% endif %}
   </div>
 </div>

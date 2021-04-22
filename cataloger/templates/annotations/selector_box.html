@@ -4,20 +4,16 @@
         <i class="fa {{ selector.kls.__icon__ }}"></i> <b>{{ selector.kls.__label__ }}</b>
       </label>
     </div>
-    <div class="col-3">
-      {{ selector.select() }}
-    </div>
-    <div class="col-1">
-      {{ selector.add() }}
-    </div>
-    <div class="col-2">
+    <div class="col-4">
       {% if key == search %}
         {{ selector.search() }}
       {% elif key == new  %}
         {{ selector.select_new() }}
+      {% else %}
+        {{ selector.select() }}
       {% endif %}
     </div>
-    <div class="col-2">
+    <div class="col-1">
       {% if key == search %}
       <a href={{ url_for("cards.edit_card", card_id=form.card_id, search=search) }}>
       <button
@@ -36,6 +32,13 @@
         title="add term">
         <i class="fa fa-check"></i></button>
       </a>
+      {% else %}
+        {{ selector.add() }}
+      {% endif %}
+    </div>
+    <div class="col-1">
+      {% if key == new %}
+       {{ form.cancel }}
       {% endif %}
     </div>
   </div>

@@ -27,14 +27,20 @@ textarea {
 
 /* Forms */
 
+
+
 .navbar-form input[type="text"],
 .navbar-form input[type="password"] {
   width: 180px;
 }
 
+.form-row {
+    margin-left: 100px;
+}
+
 
 .form-register {
-  width: 50%;
+    width: 50%;
 }
 
 .form-register .form-control {

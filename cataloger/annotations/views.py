@@ -70,12 +70,12 @@ blueprint = Blueprint(
 )
 
 ontologies = {
-    "organisms": ("NCBITAXON",),
-    "samples": ("FB-BT", "GO", "MESH", "CLO", "NCIT"),
-    "processes": ("GO", "MESH", "NCIT"),
-    "methods": ("FBbi", "EDAM-BIOIMAGING", "BAO"),
-    "genes": ("GO",),
-    "markers": None,  # ("FBbi", "EDAM-BIOIMAGING"),
+    classes["organisms"]: ("NCBITAXON",),
+    classes["samples"]: ("FB-BT", "GO", "MESH", "CLO", "NCIT"),
+    classes["processes"]: ("GO", "MESH", "NCIT"),
+    classes["methods"]: ("FBbi", "EDAM-BIOIMAGING"),
+    classes["genes"]: ("PR", "FBbi", "EDAM-BIOIMAGING"),
+    classes["markers"]: ("FBbi", "EDAM-BIOIMAGING"),
 }
 
 
@@ -119,21 +119,18 @@ def search_bioportal(search_text, **other_params):
     }
     params.update(other_params)
     response = requests.get(f"http://data.bioontology.org/search", params=params).json()
+    if "errors" in response:
+        flash(f'Invalid search, response["errors"]')
+        return {}
 
     return {term["@id"]: term for term in response["collection"]}
 
 
-def annotation_choices(cls, search_term=None):
+def annotation_choices(kls, search_term=None):
     if search_term is None:
         search_term = request.args.get("search_term")
-    suggestions = search_bioportal(search_term)  # , ontologies=ontologies[cls])
 
-    if not suggestions:
-        flash(
-            """Sorry, no results found. Please reformulate your query,
- maybe with more general terms, and check for typos""",
-            "warning",
-        )
+    suggestions = search_bioportal(search_term, ontologies=",".join(ontologies[kls]))
 
     uniq = {_format_label(term): term_id for term_id, term in suggestions.items()}
     choices = [(v, k) for k, v in uniq.items()]
@@ -176,7 +173,7 @@ def new_annotation(kls, term, card_id=None):
     return new
 
 
-def _format_label(term, show_definition=False, nwords=8):
+def _format_label(term, show_definition=False, nwords=8, nchars=0):
     label = term["prefLabel"]
     ontology_id = term["links"]["ontology"]
     definition = term.get("definition")
@@ -210,7 +207,21 @@ def search_annotation(form, key, selector, card=None):
 
     search_term = selector.search.data
     log.info("searching for %s", search_term)
-    suggestions, choices = annotation_choices(key, search_term=search_term)
+    suggestions, choices = annotation_choices(selector.kls, search_term=search_term)
+
+    if not suggestions:
+        flash(
+            """Sorry, no results found. Please reformulate your query,
+ maybe with more general terms, and check for typos""",
+            "warning",
+        )
+        selector.search.data = search_term
+        if card:
+            return render_template(
+                "annotations/new_card.html", form=form, card_id=card.id, search=key
+            )
+        return render_template("annotations/new_card.html", form=form)
+
     current_app.suggestions = suggestions
     form.update_choices(group_id=current_user.group_id)
     if card:
@@ -274,6 +285,16 @@ def edit_card(card_id, search=None, new=None):
     form = EditCardForm(card_id=card_id)
     form.update_choices(group_id=current_user.group_id)
 
+    if form.cancel.data:
+        flash("Canceled", "warning")
+        return render_template(
+            "annotations/edit_card.html",
+            form=form,
+            search=search,
+            new=new,
+            card_id=card_id,
+        )
+
     if form.select_project.new.data:
         project = new_project(form.select_project)
         card.update(project_id=project.id)
@@ -326,6 +347,13 @@ def new_card():
 
     form = NewCardForm()
     form.update_choices(group_id=current_user.group_id)
+
+    if form.cancel.data:
+        flash("Canceled", "warning")
+        return render_template(
+            "annotations/new_card.html",
+            form=form,
+        )
 
     if form.select_project.new.data:
         new_project(form.select_project)

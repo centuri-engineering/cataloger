@@ -1,7 +1,7 @@
 <div class="form-row", title="The project for this experiment">
-  <div class="col-2">
+  <div class="col-1">
       <label class="control-label mb-0">
-        <i class="fa fa-project-diagram"></i> <b>Project</b>
+        <h4>Project :</h4>
       </label>
   </div>
   <div class="col-3">
@@ -26,13 +26,3 @@
     {% endif %}
   </div>
 </div>
-{% if new == "project"  %}
-<div class="form-row">
-  <div class="col-5">
-
-  </div>
-  <div class="col-3">
-    {{ form.select_project.comment()}}
-  </div>
-</div>
-{% endif %}

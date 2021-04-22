@@ -153,6 +153,7 @@ class NewCardForm(FlaskForm):
     remove_gene_mod = SubmitField("remove last channel")
 
     save = SubmitField("save")
+    cancel = SubmitField("Cancel")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -186,6 +187,7 @@ class NewCardForm(FlaskForm):
         gene_mods = [
             get_gene_mod(gm.select_gene.data, gm.select_marker.data)
             for gm in self.select_gene_mods.entries
+            if gm
         ]
         card = Card(
             user_id=current_user.id,
@@ -215,6 +217,7 @@ class EditCardForm(NewCardForm):
         gene_mods = [
             get_gene_mod(gm.select_gene.data, gm.select_marker.data)
             for gm in self.select_gene_mods.entries
+            if gm
         ]
 
         card.update(

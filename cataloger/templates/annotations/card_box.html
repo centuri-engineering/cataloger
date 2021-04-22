@@ -23,18 +23,23 @@
   {{ form.csrf_token }}
 
   <div class="form-row" title="Something descriptive and specific">
-    <div class="col-2">
+    <div class="col-6">
       <label class="control-label mb-0">
-        <b> Title </b>
+        <h4> Title </h4>
       </label>
     </div>
-    <div class="col-5">
-      {{ form.title(placeholder="My experiment") }}
+  </div>
+  <div class="form-row">
+    <div class="col-6" style="margin-bottom: 2rem;">
+      <h4> {{ form.title(placeholder="My experiment") }} </h4>
     </div>
   </div>
+
+  {% include "annotations/project_box.html" %}
+
   <div class="form-row" title="hashtags will be imported as tags">
     <!-- Comment -->
-    <div class="col-6">
+    <div class="col-6", style="margin-top: 2rem;">
       <label class="control-label mb-0">
         <h4><i class="fa fa-comment"></i> Experiment Description </h4>
       </label>
@@ -44,12 +49,12 @@
     <hr/>
   </div>
   <div class="form-row" title="use #hashtags to register specific terms">
-    <div class="col-6">
+    <div class="col-6" style="margin-bottom: 1rem;">
       <i class="fa fa-cogs"></i> <b>Observed process</b>
     </div>
   </div>
   <div class="form-row" title="use #hashtags to register specific terms">
-    <div class="col-6">
+    <div class="col-6" style="margin-bottom: 1rem;">
       {{
         form.comment.observing(cols="80", rows="3",
       placeholder="The process of interest in this experiment,\n
@@ -58,12 +63,12 @@
     </div>
   </div>
   <div class="form-row" title="use #hashtags to register specific terms">
-    <div class="col-6">
-      <i class="fa fa-vial"></i><b>Experimental conditions</b>
+    <div class="col-6" style="margin-bottom: 1rem;">
+      <i class="fa fa-vial"></i> <b>Experimental conditions</b>
     </div>
   </div>
   <div class="form-row" title="use #hashtags to register specific terms">
-    <div class="col-6">
+    <div class="col-6" style="margin-bottom: 1rem;">
       {{
         form.comment.conditions(cols="80", rows="3",
       placeholder="Treatement with drugs, fixation method, heatshock...\n
@@ -72,8 +77,8 @@
     </div>
   </div>
   <div class="form-row" title="use #hashtags to register specific terms">
-    <div class="col-6">
-      <i class="fa fa-sticky-note"></i><b>Additional information</b>
+    <div class="col-6" style="margin-bottom: 1rem;">
+      <i class="fa fa-sticky-note"></i> <b>Additional information</b>
     </div>
   </div>
   <div class="form-row" title="use #hashtags to register specific terms">
@@ -85,11 +90,12 @@
     </div>
   </div>
   <div class="form-row">
-    <hr/>
+    <div class="col-6", style="margin-top: 2rem; margin-bottom: 1rem;">
+      <label class="control-label mb-0">
+        <h4><i class="fa fa-sitemap"></i> Categories </h4>
+      </label>
+    </div>
   </div>
-
-  {% include "annotations/project_box.html" %}
-
   {% for key, selector in form.selectors.items() %}
   {% if not (key.startswith("gene") or key.startswith("marker")) %}
   {% include "annotations/selector_box.html" %}
@@ -99,38 +105,37 @@
     <hr/>
   </div>
   <div class="form-row">
-    <div class="col-6">
+    <div class="col-5">
       <h4> <i class="fa fa-dna"></i><i class="fa fa-map-marker"></i>  Channels </h4>
+    </div>
+    <div class="col-1">
+      {% if not form.select_gene_mods %}
+      {{ form.add_gene_mod() }}
+      {% endif %}
     </div>
   </div>
   {% include "annotations/gene_mod_box.html" %}
   <div class="form-row">
-    <hr/>
-  </div>
-  <div class="form-row">
+    {% if form.select_gene_mods %}
     <div class="col-2">
       {{ form.add_gene_mod() }}
     </div>
     <div class="col-2">
-      {% if form.select_gene_mods %}
       {{ form.remove_gene_mod() }}
-      {% endif %}
     </div>
+      {% endif %}
   </div>
   <div class="form-row">
     <hr/>
   </div>
   <div class="form-row">
-    <h4>{{ form.save() }}</h4>
-  </div>
-  <div class="form-row">
       <a href={{ url_for("user.cards") }}>
         <button
-          type="button"
+          type="submit"
           class="btn btn-light"
           style="width: 8rem;"
-          title="Go home">
-          <i class="fa fa-home"></i></button>
+          title="Save">
+          <i class="fa fa-save"></i></button>
       </a>
   </div>
 </form>
