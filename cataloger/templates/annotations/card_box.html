@@ -17,9 +17,10 @@
 </div>
 
 <form action=""
-      class="form m-4 p-1"
+      class="form mb-4 p-4"
       method="post"
-      name="create_card">
+      name="create_card"
+      style="margin-left: 8rem; max-width: 76rem;">
   {{ form.csrf_token }}
 
   <div class="form-row" title="Something descriptive and specific">
@@ -28,15 +29,34 @@
         <h4> Title </h4>
       </label>
     </div>
+    <div class="col-4">
+    </div>
+    <div class="col-1">
+      <a href={{ url_for("user.cards") }}>
+        <button
+          type="submit"
+          class="btn btn-info"
+          style="width: 4rem;"
+          title="Save">
+          <i class="fa fa-save"></i></button>
+      </a>
+    </div>
   </div>
   <div class="form-row">
     <div class="col-6" style="margin-bottom: 2rem;">
       <h4> {{ form.title(placeholder="My experiment") }} </h4>
     </div>
   </div>
-
-  {% include "annotations/project_box.html" %}
-
+  <div class="form-row", title="The project for this experiment">
+    <div class="col-3">
+      <label class="control-label mb-0">
+        <h4>Project :</h4>
+      </label>
+    </div>
+    {% with key = "project", selector = form.select_project %}
+      {% include "annotations/selector_box.html" %}
+    {% endwith %}
+  </div>
   <div class="form-row">
     <div class="col-6", style="margin-top: 2rem; margin-bottom: 1rem;">
       <label class="control-label mb-0">
@@ -44,12 +64,17 @@
       </label>
     </div>
   </div>
-  {% for key, selector in form.selectors.items() %}
-  {% if not (key.startswith("gene") or key.startswith("marker")) %}
-  {% include "annotations/selector_box.html" %}
-  {% endif %}
+  {% for key in ["organisms", "samples", "methods"] %}
+  {% set selector = form.selectors[key] %}
+  <div class="form-row" >
+    <div class="col-3">
+      <label class="control-label mb-0" title="{{ selector.kls.help() }}">
+        <i class="fa {{ selector.kls.__icon__ }}"></i> <b>{{ selector.kls.__label__ }}</b>
+      </label>
+    </div>
+    {% include "annotations/selector_box.html" %}
+  </div>
   {% endfor %}
-
   <div class="form-row" title="hashtags will be imported as tags">
     <!-- Comment -->
     <div class="col-6", style="margin-top: 2rem;">
@@ -59,7 +84,15 @@
     </div>
   </div>
   <div class="form-row">
-    <hr/>
+    <div class="col-6" style="margin-bottom: 1rem;">
+      Existing tags:
+      {% for tag in form.tags %}
+      <span
+        class="badge rounded-pill bg-dark text-light"
+        style="font-size: 0.8rem; font-weigth: lighter"
+        >{{ tag }}</span>
+      {% endfor %}
+    </div>
   </div>
   <div class="form-row" title="use #hashtags to register specific terms">
     <div class="col-6" style="margin-bottom: 1rem;">
@@ -69,8 +102,8 @@
   <div class="form-row" title="use #hashtags to register specific terms">
     <div class="col-6" style="margin-bottom: 1rem;">
       {{
-        form.comment.observing(cols="80", rows="3",
-      placeholder="The process of interest in this experiment,\n
+      form.comment.observing(cols="60", rows="3",
+      placeholder="The process of interest in this experiment,
       e.g. #chromosome segregation errors during #anaphase ")
       }}
     </div>
@@ -83,8 +116,8 @@
   <div class="form-row" title="use #hashtags to register specific terms">
     <div class="col-6" style="margin-bottom: 1rem;">
       {{
-        form.comment.conditions(cols="80", rows="3",
-      placeholder="Treatement with drugs, fixation method, heatshock...\n
+      form.comment.conditions(cols="60", rows="3",
+      placeholder="Treatement with drugs, fixation method, heatshock...
       e.g #nocodazole at 0.5 µM ")
       }}
     </div>
@@ -96,10 +129,10 @@
   </div>
   <div class="form-row" title="use #hashtags to register specific terms">
     <div class="col-6">
-      {{
-        form.comment.additional(cols="80", rows="3",
-      placeholder="Anything that did not fit elsewhere")
-      }}
+        {{
+        form.comment.additional(cols="60", rows="3",
+        placeholder="Anything that did not fit elsewhere")
+        }}
     </div>
   </div>
   <div class="form-row">
@@ -107,9 +140,9 @@
   </div>
   <div class="form-row">
     <div class="col-3">
-      <h4> Channels </h4>
+      <h4> <i class="fa fa-microscope"></i> Channels </h4>
     </div>
-    <div class="col-1">
+    <div class="col-2">
       {% if not form.select_gene_mods %}
       {{ form.add_gene_mod() }}
       {% endif %}
@@ -118,10 +151,12 @@
   {% include "annotations/gene_mod_box.html" %}
   <div class="form-row" style="margin-top: 1rem">
     {% if form.select_gene_mods %}
-    <div class="col-1">
+    <div class="col-2">
       {{ form.add_gene_mod() }}
     </div>
     <div class="col-1">
+    </div>
+    <div class="col-2">
       {{ form.remove_gene_mod() }}
     </div>
       {% endif %}
@@ -130,14 +165,18 @@
     <hr/>
   </div>
   <div class="form-row">
+    <div class="col-10">
+    </div>
+    <div class="col-2 align-self-end">
       <a href={{ url_for("user.cards") }}>
         <button
           type="submit"
           class="btn btn-info"
-          style="width: 8rem;"
+          style="width: 4rem;"
           title="Save">
           <i class="fa fa-save"></i></button>
       </a>
+    </div>
   </div>
 </form>
 {% endblock %}

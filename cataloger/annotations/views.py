@@ -19,7 +19,7 @@ from flask import (
 
 from flask_login import login_required, current_user
 
-from cataloger.annotations.forms import NewCardForm, EditCardForm, ProjectForm
+from cataloger.annotations.forms import NewCardForm, EditCardForm
 
 from cataloger.annotations.models import (
     Card,
@@ -89,7 +89,6 @@ def new_project(form):
 
     project = Project(
         label=form.new.data,
-        comment=form.comment.data,
         user_id=current_user.id,
         group_id=current_user.group_id,
     )
@@ -97,16 +96,6 @@ def new_project(form):
     project.save()
     form.select.choices.insert(0, (project.id, project.label))
     return project
-
-
-@blueprint.route("/create-project/", methods=["GET", "POST"])
-@login_required
-def create_project():
-    form = ProjectForm()
-    if request.method == "POST":
-        proj = new_project(form)
-        return redirect(url_for(".create_project"))
-    return render_template("annotations/create_project.html", form=form)
 
 
 def search_bioportal(search_text, **other_params):
@@ -138,7 +127,7 @@ def annotation_choices(kls, search_term=None):
 
 
 def new_annotation(kls, term, card_id=None):
-    """New annotation."""
+    """New annotation from a bioportal search result"""
 
     match = kls.query.filter_by(label=term["prefLabel"]).first()
     if match:
@@ -173,7 +162,7 @@ def new_annotation(kls, term, card_id=None):
     return new
 
 
-def _format_label(term, show_definition=False, nwords=8, nchars=0):
+def _format_label(term, show_definition=False, nwords=8):
     label = term["prefLabel"]
     ontology_id = term["links"]["ontology"]
     definition = term.get("definition")
@@ -224,8 +213,8 @@ def search_annotation(form, key, selector, card=None):
 
     current_app.suggestions = suggestions
     form.update_choices(group_id=current_user.group_id)
-    if card:
-        form.reload_card()
+    # if card:
+    #     form.reload_card()
     selector.select_new.choices = choices
     if card:
         return render_template(
@@ -236,24 +225,33 @@ def search_annotation(form, key, selector, card=None):
 
 def add_annotation(form, key, selector, card=None):
 
-    if not hasattr(current_app, "suggestions"):
-        if card:
-            return redirect(url_for("cards.edit_card", card_id=form.card_id))
-        return render_template("annotations/new_card.html", form=form)
+    if selector.free:
+        # mock the result of a bioportal request
+        term = {"prefLabel": selector.new.data, "@id": "local term"}
 
-    term = current_app.suggestions[selector.select_new.data]
+    else:
+        if not hasattr(current_app, "suggestions"):
+            if card:
+                return redirect(url_for("cards.edit_card", card_id=form.card_id))
+            return render_template("annotations/new_card.html", form=form)
+
+        term = current_app.suggestions[selector.select_new.data]
+
     new = new_annotation(selector.kls, term)
 
     selector.choices.insert(0, (new.id, new.label))
     selector.data = new.id
 
     if selector.kls in (Gene, Marker):
-        idx = key.split("_")[-1]
+        idx = int(key.split("_")[-1])
         gene_id = form.selectors[f"gene_{idx}"].data
         marker_id = form.selectors[f"marker_{idx}"].data
         gene_mod = get_gene_mod(gene_id, marker_id)
         if card:
-            card.gene_mods.append(gene_mod)
+            if len(card.gene_mods) > idx:
+                card.gene_mods[idx] = gene_mod
+            else:
+                card.gene_mods.append(gene_mod)
             card.save()
             return redirect(url_for("cards.edit_card", card_id=form.card_id))
         return render_template("annotations/new_card.html", form=form)
@@ -294,19 +292,24 @@ def edit_card(card_id, search=None, new=None):
             new=new,
             card_id=card_id,
         )
-
-    if form.select_project.new.data:
-        project = new_project(form.select_project)
-        card.update(project_id=project.id)
-        return render_template("annotations/edit_card.html", form=form, card_id=card_id)
+    for key, selector in form.selectors.items():
+        if selector.new.data:
+            return add_annotation(form, key, selector, card)
 
     for key, selector in form.selectors.items():
         if selector.search.data:
-            search = key
-            return search_annotation(form, search, selector, card)
+            return search_annotation(form, key, selector, card)
+
+    for key, selector in form.selectors.items():
         if selector.select_new.data:
             return add_annotation(form, key, selector, card)
 
+    for key, selector in form.selectors.items():
+        if selector.add.data:
+            log.info("searching for new %s", key)
+            return render_template(
+                "annotations/edit_card.html", form=form, search=key, card_id=card_id
+            )
     if form.add_gene_mod.data:
         form.select_gene_mods.append_entry()
         return render_template("annotations/edit_card.html", form=form, card_id=card_id)
@@ -315,18 +318,6 @@ def edit_card(card_id, search=None, new=None):
         form.select_gene_mods.pop_entry()
         return render_template("annotations/edit_card.html", form=form, card_id=card_id)
 
-    if form.select_project.add.data:
-        log.info("adding new project")
-        return render_template(
-            "annotations/edit_card.html", form=form, new="project", card_id=card_id
-        )
-
-    for key, selector in form.selectors.items():
-        if selector.add.data:
-            log.info("searching for new %s", key)
-            return render_template(
-                "annotations/edit_card.html", form=form, search=key, card_id=card_id
-            )
     if request.method == "POST":  # form.validate_on_submit():
         flash(f"Edited {card.title} by user {current_user.username}", "success")
         form.save_card()
@@ -355,17 +346,6 @@ def new_card():
             form=form,
         )
 
-    if form.select_project.new.data:
-        new_project(form.select_project)
-        return render_template("annotations/new_card.html", form=form)
-
-    for key, selector in form.selectors.items():
-        if selector.search.data:
-            search = key
-            return search_annotation(form, search, selector, card=None)
-        if selector.select_new.data:
-            return add_annotation(form, key, selector, card=None)
-
     if form.add_gene_mod.data:
         form.select_gene_mods.append_entry()
         return render_template("annotations/new_card.html", form=form)
@@ -374,12 +354,21 @@ def new_card():
         form.select_gene_mods.pop_entry()
         return render_template("annotations/new_card.html", form=form)
 
-    if form.select_project.add.data:
-        return render_template("annotations/new_card.html", form=form, new="project")
+    for key, selector in form.selectors.items():
+        if selector.new.data:
+            return add_annotation(form, key, selector)
+
+    for key, selector in form.selectors.items():
+        if selector.search.data:
+            return search_annotation(form, key, selector)
+
+    for key, selector in form.selectors.items():
+        if selector.select_new.data:
+            return add_annotation(form, key, selector)
 
     for key, selector in form.selectors.items():
         if selector.add.data:
-            log.info("now searching for new %s", key)
+            log.info("searching for new %s", key)
             return render_template("annotations/new_card.html", form=form, search=key)
 
     if request.method == "POST":  #  form.validate_on_submit():

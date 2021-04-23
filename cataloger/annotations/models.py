@@ -155,17 +155,6 @@ class Card(PkModel):
         return html
 
 
-class Project(PkModel):
-    __tablename__ = "projects"
-    label = Column(db.String(128), nullable=False)
-    created_at = Column(db.DateTime, nullable=False, default=dt.datetime.utcnow)
-    user_id = reference_col("users", nullable=False)
-    user = relationship("User", backref=__tablename__)
-    group_id = reference_col("groups", nullable=False)
-    group = relationship("Group", backref=__tablename__)
-    comment = Column(db.String, nullable=True)
-
-
 class Ontology(PkModel):
     """One of bioportal ontologies"""
 
@@ -193,6 +182,20 @@ class Annotation(PkModel):
     @classmethod
     def help(cls):
         return cls.__doc__.split("\n")[0]
+
+
+class Project(Annotation):
+    """The project associtated with this experiment"""
+
+    __tablename__ = "projects"
+    user_id = reference_col("users", nullable=False)
+    user = relationship("User", backref=__tablename__)
+    group_id = reference_col("groups", nullable=False)
+    group = relationship("Group", backref=__tablename__)
+    organism_id = reference_col("organisms", nullable=True)
+    organism = relationship("Organism", backref=__tablename__)
+    __icon__ = "fa-search"
+    __label__ = "Project"
 
 
 class Organism(Annotation):
@@ -323,7 +326,7 @@ class Gene(Annotation):
     """
 
     __tablename__ = "genes"
-    __icon__ = "fa-dna"
+    __icon__ = "fa-bullseye"
     __label__ = "Target"
     user_id = reference_col("users", nullable=True)
     user = relationship("User", backref=__tablename__)

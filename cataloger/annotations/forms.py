@@ -29,33 +29,6 @@ from cataloger.annotations.models import (
 log = logging.getLogger(__name__)
 
 
-class ProjectForm(FlaskForm):
-    select = SelectField("Select Project")
-    comment = TextAreaField("Comment", default="Describe your experiment")
-    add = SubmitField("+", render_kw={"class": "btn btn-light"})
-    new = StringField("Name of the new project")
-
-
-class AnnotationForm(FlaskForm):
-
-    select = SelectField(
-        "Select the best match",
-        render_kw={
-            "class": "form-select",
-            "style": "text-overflow: ellipsis; width: 100% !important",
-        },
-    )
-    add = SubmitField("+", render_kw={"class": "btn btn-light"})
-    search = StringField("Search")
-    select_new = SelectField(
-        "Choose the best match",
-        render_kw={
-            "class": "form-select",
-            "style": "text-overflow: ellipsis; width: 100% !important",
-        },
-    )
-
-
 class CommentForm(FlaskForm):
 
     observing = TextAreaField("Observed Process", widget=TextArea())
@@ -84,19 +57,40 @@ class CommentFields(FormField):
         return [w for w in self.data if w.startswith("#")]
 
 
+class AnnotationForm(FlaskForm):
+
+    select = SelectField(
+        "Select the best match",
+        render_kw={
+            "class": "form-select",
+            "style": "text-overflow: ellipsis; width: 100% !important",
+        },
+    )
+    add = SubmitField("+", render_kw={"class": "btn btn-light"})
+    new = StringField("Enter new term")
+    search = StringField("Search")
+    select_new = SelectField(
+        "Choose the best match",
+        render_kw={
+            "class": "form-select",
+            "style": "text-overflow: ellipsis; width: 100% !important",
+        },
+    )
+
+
 class SelectAddFields(FormField):
     @property
     def choices(self):
-        log.debug(
-            "Accessing choices property for AnnotationField of %s", self.kls.__name__
-        )
+        # log.debug(
+        #     "Accessing choices property for AnnotationField of %s", self.kls.__name__
+        # )
         return self.select.choices
 
     @choices.setter
     def choices(self, choices):
-        log.debug(
-            "Setting choices property  for AnnotationField of %s", self.kls.__name__
-        )
+        # log.debug(
+        #     "Setting choices property  for AnnotationField of %s", self.kls.__name__
+        # )
         self.select.choices = choices
 
     @property
@@ -109,23 +103,20 @@ class SelectAddFields(FormField):
 
 
 class AnnotationFields(SelectAddFields):
-    def __init__(self, kls=None, *args, **kwargs):
+    def __init__(self, kls=None, free=False, *args, **kwargs):
         super().__init__(AnnotationForm, *args, **kwargs)
         self.kls = kls
-
-
-class ProjectFields(SelectAddFields):
-    def __init__(self, *args, **kwargs):
-        super().__init__(ProjectForm, *args, **kwargs)
-        self.kls = Project
+        self.free = free
 
 
 class GeneModForm(FlaskForm):
-    select_gene = AnnotationFields(Gene)
-    select_marker = AnnotationFields(Marker)
+    select_gene = AnnotationFields(Gene, free=True)
+    select_marker = AnnotationFields(Marker, free=True)
 
     def __init__(self, *args, **kwargs):
+
         super().__init__(*args, **kwargs)
+
         self.select_marker.choices = [(None, "-")] + [
             (p.id, p.label) for p in Marker.query.all()
         ]
@@ -139,8 +130,7 @@ class NewCardForm(FlaskForm):
     title = StringField("Card title")
     comment = CommentFields()
 
-    select_project = ProjectFields()
-
+    select_project = AnnotationFields(Project, free=True)
     select_organism = AnnotationFields(Organism)
     select_method = AnnotationFields(Method)
     select_sample = AnnotationFields(Sample)
@@ -158,10 +148,16 @@ class NewCardForm(FlaskForm):
         super().__init__(*args, **kwargs)
 
         self._selectors = {
+            "project": self.select_project,
             "organisms": self.select_organism,
             "samples": self.select_sample,
             "methods": self.select_method,
         }
+        self._tags = (tag.label for tag in Tag.query.all())
+
+    @property
+    def tags(self):
+        return self._tags
 
     @property
     def selectors(self):
@@ -172,9 +168,8 @@ class NewCardForm(FlaskForm):
         return self._selectors
 
     def update_choices(self, **filter_by_kwargs):
-        self.select_project.choices = [(None, "-")] + [
-            (p.id, p.label) for p in Project.query.filter_by(**filter_by_kwargs)
-        ]
+        self._tags = (tag.label for tag in Tag.query.filter_by(**filter_by_kwargs))
+
         for selector in self.selectors.values():
             selector.choices = [(None, "-")] + [
                 (instance.id, instance.label)
