@@ -180,6 +180,7 @@ class NewCardForm(FlaskForm):
 
         gene_mods = []
         for entry in self.select_gene_mods.entries:
+
             gm = get_gene_mod(entry.select_gene.data, entry.select_marker.data)
             if gm:
                 gene_mods.append(gm)
@@ -196,8 +197,11 @@ class NewCardForm(FlaskForm):
             comment=self.comment.data,
             gene_mods=gene_mods,
         )
-
-        card.save()
+        try:
+            card.save()
+        except Exception as e:
+            log.error("Error %s registering card", e)
+            return None
         return card
 
 
@@ -213,7 +217,7 @@ class EditCardForm(NewCardForm):
         gene_mods = []
         for entry in self.select_gene_mods.entries:
             gm = get_gene_mod(entry.select_gene.data, entry.select_marker.data)
-            if gm:
+            if gm and gm.label:
                 gene_mods.append(gm)
 
         card.update(

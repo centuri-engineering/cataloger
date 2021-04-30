@@ -8,9 +8,20 @@ x-default-volumes: &default_volumes
   volumes:
     - ./:/app
     - node-modules:/app/node_modules
-    - ./dev.db:/tmp/dev.db
+
 
 services:
+  cataloger_db:
+    image: "postgres:11"
+    restart: always
+    env_file:
+      - .env
+    networks:
+      - cataloger
+    volumes:
+      - "db_data:/var/lib/postgresql/data"
+      - "backup:/backups"
+
   flask-dev:
     build:
       context: .
@@ -18,6 +29,10 @@ services:
       args:
         <<: *build_args
     image: "cataloger-development"
+    depends_on:
+      - cataloger_db
+    networks:
+      - cataloger
     ports:
       - "0.0.0.0:5020:5020"
       - "0.0.0.0:2992:2992"
@@ -30,14 +45,20 @@ services:
       args:
         <<: *build_args
     image: "cataloger-production"
+    depends_on:
+      - cataloger_db
+    networks:
+      - cataloger
     ports:
       - "127.0.0.1:5020:5020"
+    restart: always
     environment:
       FLASK_ENV: production
       FLASK_DEBUG: 0
       LOG_LEVEL: info
       GUNICORN_WORKERS: 4
     <<: *default_volumes
+    restart: always
 
   manage:
     build:
@@ -47,6 +68,10 @@ services:
       FLASK_ENV: production
       FLASK_DEBUG: 0
     image: "cataloger-manage"
+    depends_on:
+      - cataloger_db
+    networks:
+      - cataloger
     stdin_open: true
     tty: true
     <<: *default_volumes
@@ -54,4 +79,17 @@ services:
 volumes:
   node-modules:
   static-build:
-  dev-db:
+  db_data:
+    driver_opts:
+      type: none
+      device: $HOME/data/cataloger
+      o: bind
+
+  backup:
+    driver_opts:
+      type: none
+      device: $HOME/data/backups/omero
+      o: bind
+
+networks:
+  cataloger:

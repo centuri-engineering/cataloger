@@ -105,6 +105,7 @@ class Card(PkModel):
             "created": self.created_at,
             "project": self.project.label,
             "user": self.user.username,
+            "group": self.group.groupname,
             "comment": self.comment,
             "kv_pairs": kv_pairs,
             "tags": self.tags,
@@ -362,6 +363,12 @@ def get_gene_mod(gene_id, marker_id):
     """Retrieves a GeneMod model if the gene / marker pair already exists,
     or creates a new one
     """
+
+    if gene_id in ("None", None):
+        gene_id = 0
+
+    if marker_id in ("None", None):
+        marker_id = 0
 
     gene_mod = GeneMod.query.filter_by(gene_id=gene_id, marker_id=marker_id).first()
     if gene_mod:

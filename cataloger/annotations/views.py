@@ -148,7 +148,20 @@ def new_annotation(kls, term, card_id=None):
         return new
 
     card = Card.get_by_id(card_id)
-    organism_id = card.organism_id if card else 0
+
+    organism_id = card.organism_id if card else 1
+    if not card:
+        organism = Organism.get_by_id(1)
+        if not organism:
+            default_organism = Organism(
+                label="Unknown",
+                bioportal_id="default",
+                user_id=1,
+                group_id=1,
+            )
+            default_organism.save()
+        organism_id = 1
+
     new = kls(
         label=term["prefLabel"],
         bioportal_id=term["@id"],
@@ -213,8 +226,6 @@ def search_annotation(form, key, selector, card=None):
 
     current_app.suggestions = suggestions
     form.update_choices(group_id=current_user.group_id)
-    # if card:
-    #     form.reload_card()
     selector.select_new.choices = choices
     if card:
         return render_template(
@@ -232,10 +243,21 @@ def add_annotation(form, key, selector, card=None):
     else:
         if not hasattr(current_app, "suggestions"):
             if card:
+                return redirect(
+                    url_for("cards.edit_card", card_id=form.card_id, search=key)
+                )
+            return render_template("annotations/new_card.html", form=form, search=key)
+        try:
+            term = current_app.suggestions[selector.select_new.data]
+        except KeyError:
+            log.error(
+                "Suggestion %s not found in suggestions %s",
+                term,
+                list(current_app.suggestions.keys()),
+            )
+            if card:
                 return redirect(url_for("cards.edit_card", card_id=form.card_id))
-            return render_template("annotations/new_card.html", form=form)
-
-        term = current_app.suggestions[selector.select_new.data]
+            return render_template("annotations/new_card.html", form=form, search=key)
 
     new = new_annotation(selector.kls, term)
 
@@ -373,7 +395,10 @@ def new_card():
 
     if request.method == "POST":  #  form.validate_on_submit():
         card = form.create_card(current_user)
-        return redirect(url_for("user.cards", card_id=card.id))
+        if not card:
+            flash("Incomplete or invalid form")
+            render_template("annotations/new_card.html", form=form)
+        return redirect(url_for("user.cards"))
 
     return render_template("annotations/new_card.html", form=form)
 
