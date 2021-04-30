@@ -65,6 +65,7 @@ class AnnotationForm(FlaskForm):
             "class": "form-select",
             "style": "text-overflow: ellipsis; width: 100% !important",
         },
+        coerce=int,
     )
     add = SubmitField("+", render_kw={"class": "btn btn-light"})
     new = StringField("Enter new term")
@@ -81,16 +82,16 @@ class AnnotationForm(FlaskForm):
 class SelectAddFields(FormField):
     @property
     def choices(self):
-        # log.debug(
-        #     "Accessing choices property for AnnotationField of %s", self.kls.__name__
-        # )
+        log.debug(
+            "Accessing choices property for AnnotationField of %s", self.kls.__name__
+        )
         return self.select.choices
 
     @choices.setter
     def choices(self, choices):
-        # log.debug(
-        #     "Setting choices property  for AnnotationField of %s", self.kls.__name__
-        # )
+        log.debug(
+            "Setting choices property  for AnnotationField of %s", self.kls.__name__
+        )
         self.select.choices = choices
 
     @property
@@ -117,10 +118,10 @@ class GeneModForm(FlaskForm):
 
         super().__init__(*args, **kwargs)
 
-        self.select_marker.choices = [(None, "-")] + [
+        self.select_marker.choices = [(0, "-")] + [
             (p.id, p.label) for p in Marker.query.all()
         ]
-        self.select_gene.choices = [(None, "-")] + [
+        self.select_gene.choices = [(0, "-")] + [
             (p.id, p.label) for p in Gene.query.all()
         ]
 
@@ -171,7 +172,7 @@ class NewCardForm(FlaskForm):
         self._tags = (tag.label for tag in Tag.query.filter_by(**filter_by_kwargs))
 
         for selector in self.selectors.values():
-            selector.choices = [(None, "-")] + [
+            selector.choices = [(0, "-")] + [
                 (instance.id, instance.label)
                 for instance in selector.kls.query.filter_by(**filter_by_kwargs)
             ]
@@ -186,14 +187,19 @@ class NewCardForm(FlaskForm):
                 gene_mods.append(gm)
 
         gene_mods = [gm for gm in gene_mods if gm]
+        title = self.title.data if self.title.data else "Card"
+        organism_id = self.select_organism.data if self.select_organism.data else None
+        sample_id = self.select_sample.data if self.select_sample.data else None
+        method_id = self.select_method.data if self.select_method.data else None
+
         card = Card(
             user_id=current_user.id,
             group_id=current_user.group_id,
-            title=self.title.data,
+            title=title,
             project_id=self.select_project.data,
-            organism_id=self.select_organism.data,
-            sample_id=self.select_sample.data,
-            method_id=self.select_method.data,
+            organism_id=organism_id,
+            sample_id=sample_id,
+            method_id=method_id,
             comment=self.comment.data,
             gene_mods=gene_mods,
         )
@@ -220,12 +226,16 @@ class EditCardForm(NewCardForm):
             if gm and gm.label:
                 gene_mods.append(gm)
 
+        organism_id = self.select_organism.data if self.select_organism.data else None
+        sample_id = self.select_sample.data if self.select_sample.data else None
+        method_id = self.select_method.data if self.select_method.data else None
+
         card.update(
             title=self.title.data,
             project_id=self.select_project.data,
-            organism_id=self.select_organism.data,
-            sample_id=self.select_sample.data,
-            method_id=self.select_method.data,
+            organism_id=organism_id,
+            sample_id=sample_id,
+            method_id=method_id,
             comment=self.comment.data,
             gene_mods=gene_mods,
         )
