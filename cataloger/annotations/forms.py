@@ -320,3 +320,28 @@ class EditCardForm(NewCardForm):
                 entry.select_marker.choices.insert(0, (0, "-"))
 
         return card
+
+
+class AnnotationLineForm(FlaskForm):
+    name = TextAreaField("Category name")
+    delete = SubmitField("Delete this term")
+    edit = SubmitField("edit")
+    see_cards = SubmitField("See associated cards")
+
+
+class ManageAnnotationForm(FlaskForm):
+
+    annotation_type = SelectField("Annotation type")
+    edit_items = FieldList(AnnotationLineForm)
+    # list all
+    # allow deletion if unused
+    # allow edition (?)
+    # see related cards
+
+    def __init__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+        self.annotation_type.choices = [
+            (kls, kls.__name__)
+            for kls in [Project, Organism, Sample, Marker, Gene, Method, Tag]
+        ]

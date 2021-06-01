@@ -19,7 +19,7 @@ from flask import (
 
 from flask_login import login_required, current_user
 
-from cataloger.annotations.forms import NewCardForm, EditCardForm
+from cataloger.annotations.forms import NewCardForm, EditCardForm, ManageAnnotationForm
 
 from cataloger.annotations.models import (
     Card,
@@ -498,3 +498,21 @@ def _increase_tag(title):
         newtitle = title[: -len(tag)] + str(int(tag) + 1)
 
     return newtitle
+
+
+@blueprint.route(
+    "/manage/",
+    methods=["GET", "POST"],
+)
+@login_required
+def manage_annotations():
+    form = ManageAnnotationForm()
+    if form.annotation_type.data:
+        kls = form.annotation_type.data
+        items = kls.query.filter_by(group_id=current_user.group_id)
+        editable = kls not in (Organism, Sample, Method, Process)
+        for item in items:
+            entry = form.edit_items.append_entry()
+            if not editable:
+                entry.name.render_kw = {"disabled": "disabled"}
+                entry.edit.render_kw = {"disabled": "disabled"}
