@@ -89,7 +89,7 @@ volumes:
   backup:
     driver_opts:
       type: none
-      device: $HOME/data/backups/omero
+      device: $HOME/data/backups/cataloger
       o: bind
 
 networks:
