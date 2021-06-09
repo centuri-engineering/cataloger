@@ -4,7 +4,7 @@ A microscopy experiment metadata filling service
 
 ## Screenshots
 
-![Cards view](assets/img/card_view.png)
+![Cards view](assets/img/cards_view.png)
 
 
 ### Card edition
