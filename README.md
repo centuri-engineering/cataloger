@@ -4,6 +4,8 @@ A microscopy experiment metadata filling service
 
 ## Screenshots
 
+### Card collection
+
 ![Cards view](assets/img/cards_view.png)
 
 
