@@ -2,6 +2,17 @@
 
 A microscopy experiment metadata filling service
 
+## Screenshots
+
+![Cards view](assets/img/card_view.png)
+
+
+### Card edition
+
+![Cards edition](assets/img/card_edition1.png)
+
+![Cards edition](assets/img/card_edition2.png)
+
 ## Docker Quickstart
 
 This app can be run completely using `Docker` and `docker-compose`. **Using Docker is recommended, as it guarantees the application is run using compatible versions of Python and Node**.
