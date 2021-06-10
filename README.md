@@ -1,6 +1,6 @@
 # Cataloger
 
-A microscopy experiment metadata filling service
+A biology experiment metadata filling service (with an emphasis on microscopy)
 
 ## Screenshots
 
@@ -14,6 +14,117 @@ A microscopy experiment metadata filling service
 ![Cards edition](assets/img/card_edition1.png)
 
 ![Cards edition](assets/img/card_edition2.png)
+
+
+## Install
+
+### Install docker for your platform
+
+### Grab an API key at Bioportal
+
+### Write a .env file
+
+Bellow is an example of .env file - user management is easier if
+it is delegated to OMERO, so if you have an OMERO server choose this.
+
+For now, local user management will not allow any control over who logs in.
+
+If you (unfortunately) need to use LDAP, I found that the `ldap3`
+python module was very helpfull in a interactive session to discover a ldap server idiosyncrasies.
+
+
+```sh
+# Environment variable overrides for local development
+FLASK_APP=autoapp.py
+FLASK_DEBUG=0
+FLASK_ENV=production
+
+POSTGRES_USER=cataloger
+POSTGRES_DB=cataloger
+POSTGRES_PASSWORD=Cattta10ger
+
+DATABASE_URL=postgresql+psycopg2://cataloger:Cattta10ger@cataloger_db/cataloger
+GUNICORN_WORKERS=1
+LOG_LEVEL=debug
+SECRET_KEY="secret"
+# In production, set to a higher number, like 31556926
+SEND_FILE_MAX_AGE_DEFAULT=31556926
+BIOPORTAL_API_KEY="aaaaaaaa-zzzz-aaaa-aaaa-aaaaaaaaa"
+
+AUTH_METHOD="OMERO" #  "LDAP", "OMERO" or "LOCAL"
+## LDAP
+LDAP_PORT=3268
+LDAP_HOST="10.2.4.2"
+LDAP_READONLY=true
+LDAP_BIND_DIRECT_PREFIX=""
+LDAP_BASE_DN="dc=example,dc=com"
+LDAP_BIND_USER_DN="admin"
+LDAP_BIND_USER_PASSWORD=""
+LDAP_USER_LOGIN_ATTR="sAMAccountName"
+LDAP_USER_RDN_ATTR="sAMAccountName"
+LDAP_USER_DN="ou=ibdml"
+LDAP_USER_SEARCH_SCOPE="SUBTREE"
+LDAP_USER_OBJECT_FILTER="(objectclass=person)"
+LDAP_USE_SSL=false
+LDAP_CHECK_NAMES=true
+LDAP_BIND_DIRECT_CREDENTIALS=false
+LDAP_BIND_DIRECT_SUFFIX=""
+LDAP_BIND_DIRECT_GET_USER_INFO=true
+LDAP_ALWAYS_SEARCH_BIND=true
+LDAP_SEARCH_FOR_GROUPS=false
+LDAP_FAIL_AUTH_ON_MULTIPLE_FOUND=false
+LDAP_BIND_AUTHENTICATION_TYPE=SIMPLE
+LDAP_GET_USER_ATTRIBUTES="*"
+LDAP_ADD_SERVER=true
+
+## OMERO
+OMERO_HOST="localhost"
+OMERO_PORT="4064"
+```
+
+
+### Initialze
+
+You first need to create and initalize de database, by entering the 3 following lines:
+
+```bash
+docker-compose run --rm manage db init
+docker-compose run --rm manage db migrate
+docker-compose run --rm manage db upgrade
+```
+
+After updates to the service, if the db changes, you'll need to run
+the two last lines to update your database.
+
+
+### Run the developement version
+
+To run the development version of the app
+
+```bash
+docker-compose up flask-dev
+```
+
+To run the production version of the app
+
+You should be able to see your app by visiting http://localhost:5020
+
+
+### Deploying
+
+
+You can run the production version with:
+
+```bash
+docker-compose up flask-prod
+```
+
+I (@glyg) use caddy as a reverse proxy service and to provide https, it is very lightweight.
+
+
+
+## flask cookie-cutter documentation
+
 
 ## Docker Quickstart
 
