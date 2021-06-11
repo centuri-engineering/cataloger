@@ -81,7 +81,16 @@ LDAP_ADD_SERVER=true
 OMERO_HOST="localhost"
 OMERO_PORT="4064"
 ```
+### Create host-side directories
 
+(Those are refered to in the `docker-compose.yml` file, you can change their values there).
+
+```bash
+mkdir ~/data/
+mkdir ~/data/cataloger # Will contain the db
+mkdir ~/data/backups
+mkdir ~/data/backups/cataloger # For db backups
+```
 
 ### Initialze
 
