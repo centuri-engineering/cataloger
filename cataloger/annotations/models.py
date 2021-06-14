@@ -50,7 +50,7 @@ class Card(PkModel):
     group = relationship("Group", backref=__tablename__)
     project_id = reference_col("projects", nullable=True)
     project = relationship("Project", backref=__tablename__)
-    organism_id = reference_col("organisms", nullable=False)
+    organism_id = reference_col("organisms", nullable=True)
     organism = relationship("Organism", backref=__tablename__)
     sample_id = reference_col("samples", nullable=True)
     sample = relationship("Sample", backref=__tablename__)
