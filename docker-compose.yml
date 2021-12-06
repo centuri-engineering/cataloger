@@ -9,7 +9,6 @@ x-default-volumes: &default_volumes
     - ./:/app
     - node-modules:/app/node_modules
 
-
 services:
   cataloger_db:
     image: "postgres:11"

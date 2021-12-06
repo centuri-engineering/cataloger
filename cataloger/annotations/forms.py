@@ -79,7 +79,12 @@ class AnnotationForm(FlaskForm):
     )
 
 
-class SelectAddFields(FormField):
+class AnnotationFields(FormField):
+    def __init__(self, kls=None, free=False, *args, **kwargs):
+        super().__init__(AnnotationForm, *args, **kwargs)
+        self.kls = kls
+        self.free = free
+
     @property
     def choices(self):
         log.debug(
@@ -101,13 +106,6 @@ class SelectAddFields(FormField):
     @data.setter
     def data(self, data):
         self.select.data = data
-
-
-class AnnotationFields(SelectAddFields):
-    def __init__(self, kls=None, free=False, *args, **kwargs):
-        super().__init__(AnnotationForm, *args, **kwargs)
-        self.kls = kls
-        self.free = free
 
 
 class GeneModForm(FlaskForm):

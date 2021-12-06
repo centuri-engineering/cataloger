@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Helper utilities and decorators."""
-from flask import flash, Blueprint, request
+from flask import flash
 
 
 def get_url_prefix(sub=""):
